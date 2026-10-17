@@ -1,0 +1,51 @@
+/* Global styles with Discord-inspired theme */
+:root {
+  /* Brand Colors */
+  --color-brand-primary: #5CCAD3;
+  /* Primary */
+  --color-brand-secondary: #E6C229;
+  /* Secondary */
+
+  /* Functional Colors */
+  --color-success: #23a559;
+  --color-warning: #f0b232;
+  /* Keeping separate for semantic warning vs brand gold */
+  --color-danger: #da373c;
+  --color-info: #5CCAD3;
+
+  /* Backgrounds */
+  --color-bg-primary: #313338;
+  --color-bg-secondary: #2b2d31;
+  --color-bg-tertiary: #1e1f22;
+
+  /* Text */
+  --color-text-header: #f2f3f5;
+  --color-text-normal: #dbdee1;
+  --color-text-muted: #949ba4;
+  --color-text-link: #5CCAD3;
+
+  /* Borders & Dividers */
+  --color-border: #1e1f22;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-normal);
+  line-height: 1.6;
+  width: 100%;
+}
+
+
+html,body { height:100%; overflow:hidden; }
+a { color:var(--color-text-link); text-decoration:none; }
+button,input,select {font:inherit;}

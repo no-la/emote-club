@@ -1,0 +1,25 @@
+
+この度は、『ポプらむ☆キウイ （テロップ）』を
+ダウンロードいただきありがとうございます。
+印刷物、映像関連の商用利用など、ご自由にご活用ください。
+
+●概要
+収録フォント：ポプらむ☆キウイ（テロップ）
+Format: OpenType / TrueType
+Licence:  SIL Open Font License, Version1.1
+収録字数：約3500字
+収録詳細：ひらかな・カタカナ・記号・数字・JIS第一水準漢字・JIS第二水準漢字（184字）他
+
+●印刷許容範囲
+　https://openfontlicense.org/
+　https://seed.line.me/index_jp.html
+
+当フォントは、LINE Seedの派生フォントとなり
+ライセンスは、SIL Open Font License, Version 1.1に基づいて公開されています。
+このライセンスは、https://scripts.sil.org/OFL に全文とFAQが案内されています。
+日本語による参考訳については、https://licenses.opensource.jp/OFL-1.1/OFL-1.1.html を参照してください。
+
+個人的か商業的かに関係なく、自由な目的でこのフォントを使用することができます。
+商用利用の場合は、製品・サービスに帰属を含めることを強く推奨します。
+
+これは法的なアドバイスではなく、場合によっては弁護士に相談することも検討し、全ての詳細については完全なライセンスを参照してください。

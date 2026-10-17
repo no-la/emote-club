@@ -1,0 +1,38 @@
+{
+  "name": "emote-club",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test:emoji": "node --conditions=react-server --import tsx --test tests/emoji-*.test.ts",
+    "test:emoji:http": "node --import tsx --test tests/workshop-http.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
+    "iron-session": "^9.0.1",
+    "lucide-react": "^0.556.0",
+    "next": "16.4.2",
+    "pixi.js": "^8.22.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,119 @@
+.workshop { height: 100dvh; margin: 0 auto; padding: 16px 20px; width: 100%; max-width: 1480px; min-height: 0; display: flex; flex-direction: column; color: #e4e7ec; }
+.heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; flex-shrink: 0; }
+.headingIdentity { display: flex; align-items: center; gap: 20px; }
+.heading h1 { font-size: 18px; margin: 0; font-weight: 600; padding-left: 20px; border-left: 1px solid #4b4f59; }
+.backLink { display: flex; align-items: center; gap: 7px; color: #b7bec8; text-decoration: none; font-size: 12px; }
+.backLink:hover { color: #e3f7fa; }
+.download { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 7px; padding: 10px 16px; background: #5ccad3; color: #163235; font-size: 13px; font-weight: 700; cursor: pointer; }
+.download:hover { background: #7ddae1; }
+.download:disabled { background: #41494c; color: #9ca6aa; cursor: default; }
+.workspace { display: grid; grid-template-columns: 260px minmax(0, 1fr) 310px; flex: 1; min-height: 0; border: 1px solid #44474e; border-radius: 10px; overflow: hidden; background: #292b30; }
+.assetSidebar { width: auto; max-width: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; border-right: 1px solid #44474e; }
+.layerSidebar { flex: 0 0 36%; min-height: 190px; min-width: 0; display: flex; flex-direction: column; border-top: 1px solid #44474e; padding: 12px 10px 10px; box-sizing: border-box; }
+.sidebarHeading { display: flex; justify-content: space-between; align-items: center; margin: 0 4px 14px; gap: 10px; }
+.sidebarHeading h2, .inspectorHeading h2, .effectTools h2 { margin: 0; font-size: 12px; font-weight: 600; }
+.sidebarHeading small { font-size: 10px; color: #939ca9; }
+.layerAdd { display: flex; gap: 6px; margin-bottom: 12px; flex-shrink: 0; }
+.layerAdd > button, .addImage { flex: 1; display: flex; justify-content: center; align-items: center; gap: 6px; min-width: 0; border: 1px solid #515662; border-radius: 6px; background: #303238; color: #dce0e6; font: inherit; font-size: 12px; padding: 8px 4px; cursor: pointer; }
+.addImage { position: relative; }
+.addImage input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.layerAdd button:disabled, .addImage[aria-disabled="true"] { opacity: 0.45; cursor: default; }
+.layerList { flex: 1; min-height: 0; list-style: none; padding: 0; margin: 0; overflow-y: auto; overscroll-behavior: contain; }
+.layerList button { width: 100%; display: flex; align-items: center; gap: 8px; min-width: 0; padding: 10px 9px; border: 0; border-radius: 5px; background: transparent; color: #bcc2cc; text-align: left; cursor: pointer; font: inherit; font-size: 12px; }
+.layerList button svg { flex-shrink: 0; }
+.layerList button span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.layerList button:hover { background: #ffffff07; }
+.layerList button[aria-pressed="true"] { color: #d2f8fc; background: #5ccad31a; box-shadow: inset 2px 0 #5ccad3; }
+.layerActions { display: flex; justify-content: flex-end; gap: 6px; padding-top: 10px; border-top: 1px solid #41444c; margin-top: 8px; flex-shrink: 0; }
+.layerActions button, .effectOrder button { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; border-radius: 5px; background: transparent; color: #bdc6d1; cursor: pointer; }
+.layerActions button:hover, .effectOrder button:hover { background: #ffffff0b; }
+.layerActions button:disabled, .effectOrder button:disabled { opacity: 0.28; cursor: default; }
+.layerHint { color: #a0a7b2; font-size: 12px; margin: 12px 4px; }
+.previewPanel { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: #222429; }
+.previewTools { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; gap: 12px; flex-shrink: 0; }
+.quietButton { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 0; border-radius: 4px; color: #aeb7c3; font-size: 11px; cursor: pointer; padding: 4px; }
+.quietButton:hover, .quietButton[aria-pressed="true"] { color: #8be3eb; background: #5ccad30b; }
+.backgrounds { display: flex; gap: 8px; align-items: center; }
+.backgrounds button { width: 18px; height: 18px; border: 1px solid #767b86; border-radius: 50%; cursor: pointer; padding: 0; }
+.backgrounds button[aria-pressed="true"] { outline: 2px solid #5ccad3; outline-offset: 2px; }
+.checker { background-color: #373940; background-image: conic-gradient(#41434b 25%, transparent 0 50%, #41434b 0 75%, transparent 0); background-size: 20px 20px; }
+.light { background: #f2f3f5; }
+.dark { background: #1e1f22; }
+.stageWrap { overflow: hidden; flex: 1; min-height: 0; container-type: size; display: flex; justify-content: center; align-items: center; }
+.stage { width: min(calc(100cqw - 48px), calc(100cqh - 40px), 512px); aspect-ratio: 1; position: relative; border-radius: 4px; box-shadow: 0 0 0 1px #ffffff12; }
+.canvasHost { overflow: hidden; border-radius: inherit; position: absolute; inset: 0; pointer-events: none; }
+.canvasHost canvas { display: block; width: 100%; height: 100%; }
+.selection { position: absolute; background: transparent; border: 1px solid transparent; padding: 0; cursor: grab; touch-action: none; border-radius: 2px; min-width: 10px; min-height: 10px; }
+.selection:hover { border-color: #5ccad37a; }
+.selection.selected { border-color: #5ccad3b0; }
+.selection:active { cursor: grabbing; }
+.resizeHandle { position: absolute; z-index: 2; width: 24px; height: 24px; padding: 0; border: 0; background: transparent; transform: translate(-50%, -50%); touch-action: none; }
+.resizeHandle::after { content: ""; position: absolute; inset: 6px; border-radius: 2px; border: 1px solid #173b40; background: #83e2e9; box-shadow: 0 0 0 1px #bffaff; pointer-events: none; }
+.resizeHandle:hover::after, .resizeHandle:active::after { background: #e0ffff; }
+.guideX, .guideY { position: absolute; pointer-events: none; z-index: 3; background: #f29df1; box-shadow: 0 0 0 1px #25272d55; }
+.guideX { top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+.guideY { left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+.empty { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; font-size: 14px; color: #b0b5bf; pointer-events: none; }
+.previewFooter { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 48px; padding: 8px 18px; flex-shrink: 0; }
+.actualSize { display: flex; align-items: center; gap: 14px; padding: 3px 6px; border-radius: 4px; }
+.smallEmoji, .tinyEmoji { display: block; background-size: contain; background-repeat: no-repeat; background-position: center; width: 32px; height: 32px; }
+.tinyEmoji { width: 16px; height: 16px; }
+.muted { color: #939ca9; font-size: 10px; }
+.inspector { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-left: 1px solid #44474e; }
+.inspectorHeading { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding: 12px 16px; border-bottom: 1px solid #41444c; flex-shrink: 0; }
+.inspectorHeading h2 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.settings { padding: 16px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+.field { display: flex; flex-direction: column; gap: 7px; font-size: 12px; margin-bottom: 14px; }
+.field > span { display: flex; justify-content: space-between; align-items: center; }
+.field small { color: #939ca9; font-size: 10px; }
+.field textarea, .positionFields input { width: 100%; box-sizing: border-box; background: #202226; color: #f0f1f3; border: 1px solid #4b4f59; border-radius: 6px; padding: 8px 10px; font: inherit; }
+.field textarea { font-size: 18px; line-height: 1.5; resize: vertical; min-height: 60px; max-height: 140px; }
+.slider { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; font-size: 12px; min-width: 0; }
+.slider > span { display: flex; justify-content: space-between; gap: 8px; }
+.slider output { color: #a4afbd; font-size: 10px; font-variant-numeric: tabular-nums; }
+.slider input { width: 100%; min-width: 0; margin: 3px 0; accent-color: #5ccad3; cursor: pointer; }
+.colorRow { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 34px; font-size: 12px; }
+.colorTrigger { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #515662; border-radius: 5px; padding: 4px 5px; background: #303238; color: #b8c2cf; cursor: pointer; }
+.colorTrigger > span { width: 22px; height: 20px; border: 1px solid #ffffff30; border-radius: 3px; }
+.appearance { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: center; margin-top: 10px; }
+.appearance .slider { margin-top: 0; }
+.shadowSettings { margin-top: 10px; padding-top: 8px; border-top: 1px solid #41444c; }
+.shadowSettings > .colorRow { grid-column: 1 / -1; }
+.transform { margin: 12px 0 12px; }
+.details { padding-top: 8px; margin-top: 8px; }
+.details summary { font-size: 11px; cursor: pointer; color: #a8b2c0; }
+.details[open] summary { margin-bottom: 10px; }
+.positionFields { display: flex; gap: 12px; }
+.positionFields label { flex: 1; display: grid; gap: 6px; font-size: 11px; }
+.upload { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 10px; border: 1px dashed #606772; border-radius: 7px; color: #dce0e6; font-size: 13px; cursor: pointer; }
+.upload:hover { background: #5ccad308; border-color: #5ccad3; }
+.upload small { font-size: 10px; color: #a3acb8; }
+.upload input { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.error { margin: 12px; color: #ffb3b3; font-size: 12px; }
+.effectTools { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 14px; border-top: 1px solid #41444c; }
+.effectTools h2 { margin-right: auto; }
+.effectTools > button { display: flex; align-items: center; gap: 4px; border: 0; border-radius: 4px; background: transparent; color: #bdeaf0; font-size: 11px; cursor: pointer; padding: 5px; }
+.effectTools > button:disabled { color: #7d8794; cursor: default; }
+.effectSettings { border-bottom: 1px solid #41444c; padding: 12px 0; }
+.effectSettings header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.effectSettings h3 { margin: 0; font-size: 12px; font-weight: 500; color: #cbd2dc; }
+.effectOrder { display: flex; gap: 2px; }
+.effectOrder button { width: 24px; height: 24px; }
+.effectColor { margin-top: 10px; }
+.effectBadge { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; border-radius: 8px; background: #5ccad329; color: #a8eff4; font-size: 10px; }
+.popover { position: fixed; inset: auto; width: 236px; box-sizing: border-box; padding: 12px; margin: 0; max-height: calc(100dvh - 16px); overflow-y: auto; border: 1px solid #59616e; border-radius: 8px; background: #30343c; color: #e5eaf0; box-shadow: 0 8px 30px #0007; }
+.popover::backdrop { background: transparent; }
+.popoverHeader { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 12px; }
+.popoverHeader button { display: flex; border: 0; background: transparent; color: #bfc9d5; cursor: pointer; padding: 3px; }
+.swatchChoices { display: flex; justify-content: space-between; gap: 7px; }
+.swatchChoices button { width: 27px; height: 27px; border: 1px solid #ffffff40; border-radius: 5px; cursor: pointer; }
+.swatchChoices button[aria-pressed="true"] { outline: 2px solid #8ee2eb; outline-offset: 2px; }
+.nativeColor { display: flex; align-items: center; gap: 8px; font-size: 11px; margin-top: 14px; color: #b9c4d1; }
+.nativeColor input { width: 29px; height: 25px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.nativeColor > span { margin-left: auto; font-size: 10px; font-family: monospace; }
+.effectMenu { padding: 6px; }
+.effectMenu > button { display: block; width: 100%; padding: 10px 12px; text-align: left; border: 0; border-radius: 4px; background: transparent; color: #e2e8ef; font: inherit; font-size: 12px; cursor: pointer; }
+.effectMenu > button:hover, .effectMenu > button:focus-visible { background: #5ccad31a; }
+.workshop button:focus-visible, .workshop input:focus-visible, .workshop textarea:focus-visible, .workshop summary:focus-visible, .backLink:focus-visible, .addImage:focus-within, .upload:focus-within { outline: 2px solid #5ccad3; outline-offset: 2px; }
+
+@media (max-width:1200px) { .heading { flex-wrap:wrap; gap:8px; } .headingIdentity { margin-right:auto; } }

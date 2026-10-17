@@ -1,0 +1,59 @@
+.account { display: flex; align-items: center; gap: 10px; margin-left: auto; font-size: 12px; min-width: 0; }
+.account > span { max-width: 140px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.account a, .account button { display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; color: #c4ceda; text-decoration: none; padding: 6px; cursor: pointer; font: inherit; }
+.account .unavailable { color: #939ca9; }
+.account .accountError { color: #ffb3b3; }
+.library { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px 12px 12px; overflow: hidden; }
+.libraryHeading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; }
+.libraryHeading h2 { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 13px; font-weight: 600; color: #d6e8ed; }
+.library button, .empty a { border: 1px solid #515c6a; border-radius: 5px; padding: 6px 8px; background: #30363f; color: #d5e5ed; font: inherit; font-size: 11px; cursor: pointer; text-decoration: none; }
+.library button:disabled { opacity: .4; cursor: default; }
+.library .libraryHeading > button { display: flex; padding: 3px; border: 0; background: transparent; }
+.subtitle { margin: -4px 0 0; font-size: 10px; color: #9eaabb; }
+.libraryTools { display: flex; gap: 6px; align-items: stretch; flex-shrink: 0; }
+.libraryTools .captureButton, .uploadButton { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 6px; border: 1px solid #5ccad350; border-radius: 5px; color: #b7edf2; background: #5ccad310; font-size: 11px; white-space: nowrap; }
+.uploadButton { position: relative; cursor: pointer; flex: 1; border-color: #515c6a; color: #c3cedd; background: transparent; }
+.uploadButton input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.uploadButton[aria-disabled="true"] { opacity: .4; cursor: default; }
+.uploadButton input:disabled { cursor: default; }
+.content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 9px; padding: 0 2px 4px 0; margin: 0; list-style: none; }
+.card { min-width: 0; position: relative; display: flex; flex-direction: column; gap: 5px; border: 1px solid #444d59; border-radius: 7px; padding: 6px; }
+.card .assetPreview { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 1; padding: 0; border: 0; border-radius: 4px; background-color: #343840; background-image: conic-gradient(#40454e 25%, transparent 0 50%, #40454e 0 75%, transparent 0); background-size: 16px 16px; overflow: hidden; }
+.assetPreview img { width: 100%; height: 100%; object-fit: contain; }
+.assetPreview .addHint { position: absolute; bottom: 3px; right: 3px; display: flex; align-items: center; gap: 2px; padding: 2px 3px; border-radius: 4px; background: #1e252ee8; font-size: 9px; opacity: 0; }
+.assetPreview:hover .addHint, .assetPreview:focus-visible .addHint { opacity: 1; }
+.card strong { font-size: 11px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card small { padding-right: 20px; font-size: 9px; color: #9daabd; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cardActions > summary { position: absolute; right: 4px; bottom: 3px; list-style: none; display: flex; color: #aab9cc; cursor: pointer; border-radius: 3px; }
+.cardActions > summary::-webkit-details-marker { display: none; }
+.cardActions[open] > summary { top: 3px; bottom: auto; background: #202329; z-index: 1; }
+.cardActions > div { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid #414852; padding-top: 5px; }
+.cardActions button { padding: 4px; font-size: 10px; }
+.cardActions span { font-size: 10px; }
+.rename { display: flex; flex-wrap: wrap; gap: 5px; }
+.rename input { font-size: 11px; }
+.rename button { font-size: 10px; padding: 4px; }
+.library input:not([type="file"]) { min-width: 0; width: 100%; box-sizing: border-box; background: #202329; border: 1px solid #59616e; border-radius: 4px; padding: 7px 8px; color: #f0f2f5; font: inherit; }
+.empty { text-align: center; padding: 24px 10px; font-size: 12px; line-height: 1.7; color: #aebdcc; overflow-y: auto; }
+.empty p { margin: 0 0 18px; }
+.error, .notice { margin: 0; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.error { color: #ffb3b3; }
+.notice { color: #b4c0cf; }
+.more { display: block; margin: 12px auto 0; }
+.dialog { width: min(420px, calc(100vw - 40px)); max-height: calc(100dvh - 40px); padding: 20px; border: 1px solid #555f6d; border-radius: 12px; background: #272a30; color: #e4e7ec; box-sizing: border-box; overflow-y: auto; }
+.dialog[open] { display: flex; flex-direction: column; gap: 16px; }
+.dialog::backdrop { background: #0009; }
+.dialog header { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.dialog h2 { margin: 0; font-size: 17px; }
+.dialog header > button { display: flex; padding: 4px; border: 0; background: transparent; }
+.uploadPreview { width: 128px; height: 128px; flex-shrink: 0; margin: 0 auto; background-color: #414650; background-position: center; background-size: contain; background-repeat: no-repeat; border-radius: 5px; }
+.uploadForm { display: grid; gap: 12px; }
+.uploadForm label { display: grid; gap: 7px; font-size: 12px; }
+.uploadForm small { color: #a8b3c1; font-size: 11px; line-height: 1.6; }
+.uploadActions { display: flex; justify-content: flex-end; gap: 8px; }
+.uploadActions button { padding: 8px 12px; }
+.uploadActions button:last-child { background: #5ccad3; border-color: #5ccad3; color: #163235; }
+.library button:focus-visible, .library input:focus-visible, .library summary:focus-visible, .empty a:focus-visible, .account a:focus-visible, .account button:focus-visible, .uploadButton:focus-within { outline: 2px solid #5ccad3; outline-offset: 2px; }
+
+.account select { max-width:220px; min-width:140px; padding:6px; color:var(--color-text-normal); background:var(--color-bg-tertiary); border:1px solid #555; border-radius:6px; }
