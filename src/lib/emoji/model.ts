@@ -3,6 +3,7 @@ export const OUTPUT_SIZE = 128;
 export type ElementId = string;
 export type Transform = { x: number; y: number; scale: number };
 export const EFFECTS = {
+  shadow: { name: "影", control: "距離" },
   wave: { name: "うねうね", control: "強さ" },
   glow: { name: "ふちが光る", control: "光の広がり" },
   pixel: { name: "ドット", control: "粗さ" },
@@ -16,13 +17,11 @@ export type TextAppearance = {
   lineSpacing: number;
   outlineColor: string;
   outline: number;
-  shadow: number;
-  shadowColor: string;
-  shadowBlur: number;
 };
 export type EffectStack = {
   effects: EffectId[];
   effectSettings: {
+    shadow: { strength: number; color: string; angle: number; blur: number };
     wave: { strength: number; phase: number; angle: number };
     glow: { strength: number; color: string };
     pixel: { strength: number };
@@ -37,6 +36,7 @@ export function initialEffects(): EffectStack {
   return {
     effects: [],
     effectSettings: {
+      shadow: { strength: 12, color: "#121218", angle: 45, blur: 6 },
       wave: { strength: 8, phase: 0, angle: 0 }, glow: { strength: 8, color: "#ffc740" },
       pixel: { strength: 8 }, rgb: { strength: 8, angle: 0 },
     },
@@ -64,7 +64,7 @@ export const FONT_FAMILIES = Object.fromEntries(Object.entries(FONTS).map(([id, 
 export function createTextLayer(id: string, text = "文字"): TextLayer {
   return {
     ...initialEffects(), id, kind: "text", text, opacity: 1, font: "dela", color: "#ffe477", outlineColor: "#292329",
-    letterSpacing: 0, lineSpacing: 0, outline: 10, shadow: 0, shadowColor: "#121218", shadowBlur: 0,
+    letterSpacing: 0, lineSpacing: 0, outline: 10,
     transform: { x: 256, y: 256, scale: 1 },
   };
 }

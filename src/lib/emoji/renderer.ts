@@ -72,7 +72,6 @@ export async function createEmojiRenderer(host: HTMLElement) {
             fontWeight: layer.font === "sans" || layer.font === "serif" ? "bold" : "normal",
             fill: layer.color, align: "center", padding: 32,
             stroke: layer.outline ? { color: layer.outlineColor, width: layer.outline, join: "round" } : undefined,
-            dropShadow: layer.shadow || layer.shadowBlur ? { color: layer.shadowColor, alpha: 0.65, blur: layer.shadowBlur, distance: layer.shadow, angle: Math.PI / 4 } : undefined,
             wordWrap: false,
           };
           if (layer.lineSpacing) {

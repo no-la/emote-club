@@ -36,7 +36,11 @@ export default function EffectEditor({ value, label, onChange }: { value: Effect
         <button type="button" aria-label={`${EFFECTS[effect].name}を解除`} title="解除" onClick={() => onChange({ effects: value.effects.filter(id => id !== effect), effectSettings: value.effectSettings })}><X size={14} /></button>
       </div></header>
       <Slider label={EFFECTS[effect].control} value={value.effectSettings[effect].strength} min={0} max={24} onChange={strength => configure(effect, { strength })} />
-      {(effect === "wave" || effect === "rgb") && <Slider label="向き" unit="°" value={value.effectSettings[effect].angle} min={0} max={360} onChange={angle => configure(effect, { angle })} />}
+      {(effect === "wave" || effect === "rgb" || effect === "shadow") && <Slider label="向き" unit="°" value={value.effectSettings[effect].angle} min={0} max={360} onChange={angle => configure(effect, { angle })} />}
+      {effect === "shadow" && <>
+        <Slider label="ぼかし" value={value.effectSettings.shadow.blur} min={0} max={24} onChange={blur => configure("shadow", { blur })} />
+        <div className={styles.effectColor}><ColorPalette label="影の色" value={value.effectSettings.shadow.color} onChange={color => configure("shadow", { color })} /></div>
+      </>}
       {effect === "glow" && <div className={styles.effectColor}><ColorPalette label="光の色" value={value.effectSettings.glow.color} onChange={color => configure("glow", { color })} /></div>}
       {effect === "wave" && <Slider label="波の位置" value={value.effectSettings.wave.phase} min={0} max={6.28} step={0.05} onChange={phase => configure("wave", { phase })} />}
     </section>)}

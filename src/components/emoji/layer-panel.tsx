@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowUp, ArrowDown, Copy, Trash2, Type, ImagePlus, Sparkles, GripVertical } from "lucide-react";
-import { useState, useRef, useEffect, type PointerEvent, type ReactNode } from "react";
-import { layerName, type EmojiLayer, type TextLayer, type TextAppearance } from "@/lib/emoji/model";
+import { useState, useRef, useEffect, useId, type PointerEvent, type ReactNode } from "react";
+import { layerName, type EmojiLayer, type TextAppearance } from "@/lib/emoji/model";
 import { ColorPalette, Slider } from "./editor-controls";
 import { PanelBody } from "./mobile-panel";
 import FontPicker from "./font-picker";
@@ -108,39 +108,46 @@ export default function LayerPanel({ layers, selected, loading, imageError, onSe
   </>;
 }
 
-export function LayerAppearance({ layer, loading, onTextChange, onLoadImage, settingsNavigation }: {
-  settingsNavigation?: ReactNode;
+function SettingsSection({ title, children }: { title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(true);
+  const id = useId();
+  return <section className={styles.settingsSection}>
+    <button type="button" className={styles.sectionToggle} aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}><span aria-hidden="true">{open ? "▾" : "▸"}</span>{title}</button>
+    <div id={id} className={styles.sectionBody} data-collapsed={!open}>{children}</div>
+  </section>;
+}
+
+export function LayerAppearance({ layer, loading, onTextChange, onLoadImage, opacity, placement }: {
+  opacity: ReactNode; placement: ReactNode;
   layer: EmojiLayer; loading: boolean; onTextChange: (change: Partial<TextAppearance & { text: string }>) => void;
   onLoadImage: (file?: File, replaceId?: string) => void;
 }) {
-  if (layer.kind === "text") return <TextSettings layer={layer} onChange={onTextChange} settingsNavigation={settingsNavigation} />;
-  return <><label className={styles.upload}>
-    <ImagePlus size={24} /><span>{loading ? "読み込み中…" : "画像を変更"}</span><small>PNG・JPEG・WebP / 20 MiBまで・大きな画像は自動縮小</small>
-    <input type="file" accept="image/png,image/jpeg,image/webp" aria-label="選択レイヤーの画像を変更" disabled={loading} onChange={event => { onLoadImage(event.target.files?.[0], layer.id); event.target.value = ""; }} />
-  </label>{settingsNavigation}</>;
-}
-
-function TextSettings({ layer, onChange, settingsNavigation }: { settingsNavigation?: ReactNode; layer: TextLayer; onChange: (change: Partial<TextAppearance & { text: string }>) => void }) {
   return <>
-    <div className={styles.textGroup}><label className={styles.field}><span>文字 <small>{layer.text.length}/40</small></span>
-      <textarea rows={2} maxLength={40} value={layer.text} placeholder="文字を入力" onChange={event => onChange({ text: event.target.value })} />
-    </label>
-    <div className={styles.fontGroup}><FontPicker value={layer.font} text={layer.text} onChange={font => onChange({ font })} /></div></div>
-    {settingsNavigation}
-    <div className={styles.spacingGroup}>
-    <div className={styles.appearance}>
-      <Slider label="字間" value={layer.letterSpacing ?? 0} min={-30} max={100} unit="%" onChange={letterSpacing => onChange({ letterSpacing })} />
-      <Slider label="行間" value={layer.lineSpacing ?? 0} min={-50} max={150} unit="%" onChange={lineSpacing => onChange({ lineSpacing })} />
-    </div>
-    </div><div className={styles.colorGroup}><ColorPalette label="文字色" value={layer.color} onChange={color => onChange({ color })} />
-    <div className={styles.appearance}>
-      <ColorPalette label="縁の色" value={layer.outlineColor} onChange={outlineColor => onChange({ outlineColor })} />
-      <Slider label="縁の太さ" value={layer.outline} min={0} max={24} onChange={outline => onChange({ outline })} />
-    </div>
-    </div><div className={styles.shadowGroup}><div className={`${styles.appearance} ${styles.shadowSettings}`}>
-      <ColorPalette label="影の色" value={layer.shadowColor} onChange={shadowColor => onChange({ shadowColor })} />
-      <Slider label="影の距離" value={layer.shadow} min={0} max={24} onChange={shadow => onChange({ shadow })} />
-      <Slider label="ぼかし" value={layer.shadowBlur} min={0} max={24} onChange={shadowBlur => onChange({ shadowBlur })} />
-    </div></div>
+    {layer.kind === "text" ? <div className={styles.textGroup}>
+      <label className={styles.field}><span>文字 <small>{layer.text.length}/40</small></span>
+        <textarea rows={2} maxLength={40} value={layer.text} placeholder="文字を入力" onChange={event => onTextChange({ text: event.target.value })} />
+      </label>
+      <div className={styles.fontGroup}><FontPicker value={layer.font} text={layer.text} onChange={font => onTextChange({ font })} /></div>
+    </div> : <label className={styles.upload}>
+      <ImagePlus size={24} /><span>{loading ? "読み込み中…" : "画像を変更"}</span><small>PNG・JPEG・WebP / 20 MiBまで・大きな画像は自動縮小</small>
+      <input type="file" accept="image/png,image/jpeg,image/webp" aria-label="選択レイヤーの画像を変更" disabled={loading} onChange={event => { onLoadImage(event.target.files?.[0], layer.id); event.target.value = ""; }} />
+    </label>}
+    <SettingsSection title="見た目">
+      {layer.kind === "text" && <div className={styles.colorGroup}>
+        <ColorPalette label="文字色" value={layer.color} onChange={color => onTextChange({ color })} />
+        <div className={styles.appearance}>
+          <ColorPalette label="縁の色" value={layer.outlineColor} onChange={outlineColor => onTextChange({ outlineColor })} />
+          <Slider label="縁の太さ" value={layer.outline} min={0} max={24} onChange={outline => onTextChange({ outline })} />
+        </div>
+      </div>}
+      <div className={styles.opacityGroup}>{opacity}</div>
+    </SettingsSection>
+    <SettingsSection title="配置">
+      {placement}
+      {layer.kind === "text" && <div className={styles.spacingGroup}><div className={styles.appearance}>
+        <Slider label="字間" value={layer.letterSpacing ?? 0} min={-30} max={100} unit="%" onChange={letterSpacing => onTextChange({ letterSpacing })} />
+        <Slider label="行間" value={layer.lineSpacing ?? 0} min={-50} max={150} unit="%" onChange={lineSpacing => onTextChange({ lineSpacing })} />
+      </div></div>}
+    </SettingsSection>
   </>;
 }

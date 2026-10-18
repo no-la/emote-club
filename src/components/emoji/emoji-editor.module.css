@@ -77,8 +77,6 @@
 .colorTrigger > span { width: 22px; height: 20px; border: 1px solid #ffffff30; border-radius: 3px; }
 .appearance { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: center; margin-top: 10px; }
 .appearance .slider { margin-top: 0; }
-.shadowSettings { margin-top: 10px; padding-top: 8px; border-top: 1px solid #41444c; }
-.shadowSettings > .colorRow { grid-column: 1 / -1; }
 .transform { margin: 12px 0 12px; }
 .details { padding-top: 8px; margin-top: 8px; }
 .details summary { font-size: 11px; cursor: pointer; color: #a8b2c0; }
@@ -224,7 +222,7 @@
 }
 
 /* Focused phone layout: keep secondary controls out of the working area. */
-.accountMenu, .fontGroup, .shadowGroup, .sizeGroup { display: contents; }
+.accountMenu, .fontGroup, .sizeGroup { display: contents; }
 .menuHeading, .menuOptions, .menuBackdrop { display: none; }
 @media (max-width: 900px) {
   .heading { min-height: 56px; padding: 6px 12px; }
@@ -256,9 +254,8 @@
   .mobileCategories button { flex: 1 0 auto; padding: 8px; font-size: 13px; }
   .mobileCategories .addTextButton { flex: 0 0 44px; display: grid; place-items: center; }
   .field textarea { min-height: 80px; resize: none; }
-  .workshop .shadowGroup, .workshop .transform > .details { display: none; }
-  .workshop[data-edit-section="advanced"] .spacingGroup,
-  .workshop[data-edit-section="advanced"] .shadowGroup { display: contents; }
+  .workshop .transform > .details { display: none; }
+  .workshop[data-edit-section="advanced"] .spacingGroup { display: contents; }
   .workshop[data-edit-section="advanced"] .transform { display: block; }
   .workshop[data-edit-section="advanced"] .transform > .details { display: block; }
   .workshop[data-edit-section="advanced"] .sizeGroup { display: none; }
@@ -305,19 +302,20 @@
 }
 
 .headerActions { display: flex; gap: 8px; align-items: center; }
-.menuTrigger, .desktopCategories { display: none; }
+.menuTrigger { display: none; }
+.settingsSection, .sectionBody, .opacityGroup { display: contents; }
+.sectionToggle { display: none; }
+@media (max-width: 900px) {
+  .workshop:not([data-edit-section="transform"]) .opacityGroup { display: none; }
+}
 @media (min-width: 901px) {
-  .settings { display: flex; flex-direction: column; }
-  .desktopCategories { display: flex; gap: 4px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid #41444c; flex-shrink: 0; }
-  .desktopCategories button { flex: 1; min-height: 36px; border: 0; border-radius: 6px; padding: 8px; background: transparent; color: #a8b3c1; cursor: pointer; }
-  .desktopCategories button[aria-pressed="true"] { color: #92e5ed; background: #5ccad31a; }
-  .desktopCategories button:focus-visible { outline: 2px solid #5ccad3; outline-offset: -2px; }
-  .colorGroup, .spacingGroup, .shadowGroup, .transform { display: block; }
-  .layerEffects { display: block; }
-  .workshop:not([data-desktop-section="color"]) .colorGroup,
-  .workshop:not([data-desktop-section="advanced"]) .spacingGroup,
-  .workshop:not([data-desktop-section="advanced"]) .shadowGroup,
-  .workshop[data-desktop-section="color"] .transform,
-  .workshop[data-desktop-section="transform"] .transform > .details,
-  .workshop[data-desktop-section="advanced"] .sizeGroup { display: none; }
+  .settings { display: flex; flex-direction: column; gap: 14px; }
+  .settingsSection { display: block; border-top: 1px solid #41444c; padding-top: 12px; }
+  .sectionToggle { display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px 0; border: 0; background: transparent; color: #e5eaf0; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; }
+  .sectionToggle:focus-visible { outline: 2px solid #5ccad3; outline-offset: 3px; }
+  .sectionBody { display: block; padding-top: 10px; }
+  .sectionBody[data-collapsed="true"] { display: none; }
+  .colorGroup, .spacingGroup, .transform, .opacityGroup, .layerEffects { display: block; }
+  .transform { margin-top: 0; }
+  .transform .slider:first-child { margin-top: 0; }
 }

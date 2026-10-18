@@ -17,6 +17,32 @@ vec4 sampleAt(vec2 uv) {
 `;
 
 const fragments = {
+  shadow: `
+uniform vec3 uShadowColor;
+uniform float uAngle;
+uniform float uBlur;
+void main() {
+  vec4 center = sampleAt(vTextureCoord);
+  vec2 origin = vTextureCoord - vec2(cos(uAngle), sin(uAngle)) * uStrength * uInputSize.zw;
+  float alpha = 0.0;
+  if (uBlur == 0.0) {
+    alpha = sampleAt(origin).a;
+  } else {
+    float weightSum = 0.0;
+    for (int y = -4; y <= 4; y++) {
+      for (int x = -4; x <= 4; x++) {
+        vec2 offset = vec2(float(x), float(y)) / 4.0;
+        float weight = exp(-dot(offset, offset) * 2.0);
+        alpha += sampleAt(origin + offset * uBlur * uInputSize.zw).a * weight;
+        weightSum += weight;
+      }
+    }
+    alpha /= weightSum;
+  }
+  alpha *= 0.65 * (1.0 - center.a);
+  // Composite a premultiplied shadow behind the actual alpha silhouette.
+  finalColor = center + vec4(uShadowColor * alpha, alpha);
+}`,
   glow: `
 uniform vec3 uGlowColor;
 void main() {
@@ -60,9 +86,10 @@ export function createEffectFilter(effect: keyof typeof fragments) {
       vertex: filterVertex, fragment: (common + fragments[effect]).trim(),
       name: `emoji-${effect}`, preferredFragmentPrecision: "highp",
     }),
-    padding: 32,
+    padding: effect === "shadow" ? 64 : 32,
     resources: { effectUniforms: {
       uStrength: { value: 8, type: "f32" },
+      ...(effect === "shadow" ? { uAngle: { value: Math.PI / 4, type: "f32" }, uBlur: { value: 6, type: "f32" }, uShadowColor: { value: new Float32Array([0.07, 0.07, 0.09]), type: "vec3<f32>" } } : {}),
       ...(effect === "rgb" ? { uAngle: { value: 0, type: "f32" } } : {}),
       ...(effect === "glow" ? { uGlowColor: { value: new Float32Array([1, 0.78, 0.25]), type: "vec3<f32>" } } : {}),
     } },
