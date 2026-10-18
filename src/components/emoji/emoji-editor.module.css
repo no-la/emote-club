@@ -147,7 +147,7 @@
   .heading > .download { display: none; }
   .mobileHeaderActions { display: flex; gap: 8px; align-items: center; }
   .mobileHeaderActions > button { min-width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
-  .mobileHeaderActions > button:first-child { background: transparent; color: #c4ceda; border: 0; border-radius: 6px; }
+  .mobileHeaderActions > .menuTrigger { background: transparent; color: #c4ceda; border: 0; border-radius: 6px; }
   .workspace { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(110px, 1fr) minmax(0, 42%); border: 0; border-radius: 0; background: #222429; }
   .workshop[data-expanded="true"] .workspace { grid-template-rows: minmax(80px, 1fr) minmax(0, 65%); }
   .assetSidebar { display: contents; }
