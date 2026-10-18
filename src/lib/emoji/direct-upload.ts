@@ -7,7 +7,7 @@ export async function reserveAssetUpload(name: string, guildId: string) {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }),
   });
 }
-export async function sendAssetUpload(ticket: AssetUploadTicket, file: File, guildId: string) {
+export async function uploadSignedImage(ticket: AssetUploadTicket, file: Blob) {
   if (!ticket.uploaded) {
     const timeout = new AbortController();
     const timer = setTimeout(() => timeout.abort(), 60_000);
@@ -27,5 +27,8 @@ export async function sendAssetUpload(ticket: AssetUploadTicket, file: File, gui
       throw error;
     } finally { clearTimeout(timer); }
   }
+}
+export async function sendAssetUpload(ticket: AssetUploadTicket, file: File, guildId: string) {
+  await uploadSignedImage(ticket, file);
   return workshopRequest<{ asset: SharedAsset }>(guildUrl("/api/emoji/assets/" + ticket.id + "/complete", guildId), { method: "POST" });
 }

@@ -16,6 +16,7 @@ const messages: Record<string, string> = {
   discord_rate_limit: "Discordの登録制限中です。表示された時間を待ってから再試行してください。",
   discord_rejected: "Discordが画像または名前を受け付けませんでした。内容を確認してください。",
   discord_unavailable: "Discordに接続できませんでした。少し待ってから再試行してください。",
+  cancelled_before_send: "送信前に中断した登録を取り消しました。内容を見直して登録できます。",
   unknown: "登録結果を確認できません。重複を避けるため再送していません。Discordの絵文字一覧を確認してください。",
 };
 type Attempt = {
@@ -46,7 +47,7 @@ export async function normalizeEmoji(input: Uint8Array) {
     const image = sharp(bytes, { limitInputPixels: 128 * 128, failOn: "warning" });
     const meta = await image.metadata();
     if (meta.format !== "png" || meta.width !== 128 || meta.height !== 128 || (meta.pages ?? 1) !== 1) throw new Error("invalid dimensions");
-    const png = await image.png().toBuffer();
+    const png = await image.timeout({ seconds: 5 }).png().toBuffer();
     if (png.length > EMOJI_UPLOAD_BYTES) throw new Error("output too large");
     return png;
   } catch {
@@ -146,6 +147,7 @@ export async function registrationPost(request: Request) {
     requireSameOrigin(request);
     const member = await requireMember(request, true);
     requireEmojiCreator(member);
-    return privateJson(await registerEmoji(await registrationInput(request), member));
+    const { completeRegistrationUpload } = await import("./registration-upload");
+    return privateJson(await completeRegistrationUpload(request, member));
   });
 }

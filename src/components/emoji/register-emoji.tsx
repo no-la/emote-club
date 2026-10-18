@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { emojiName, type RegistrationResult } from "@/lib/emoji/registration";
 import { guildUrl, type WorkshopIdentity } from "@/lib/emoji/shared";
 import { WorkshopRequestError, workshopRequest } from "./workshop-account";
+import { uploadSignedImage, type AssetUploadTicket } from "@/lib/emoji/direct-upload";
 import styles from "./register-emoji.module.css";
 
 type Submission = { requestId: string; name: string };
@@ -12,6 +13,8 @@ export type RegisterEmojiHandle = { open: () => void };
 export default function RegisterEmoji({ identity, image, controlRef }: { controlRef?: Ref<RegisterEmojiHandle>; identity: WorkshopIdentity | null; image?: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const inFlight = useRef(false);
+  const uploadTicket = useRef<(AssetUploadTicket & { name: string }) | null>(null);
+  const [canCancelUnstarted, setCanCancelUnstarted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -55,6 +58,7 @@ export default function RegisterEmoji({ identity, image, controlRef }: { control
   }
   function open() {
     if (!submission) {
+      uploadTicket.current = null;
       setPreview(image || null); setOutcome(null); setError("");
       try {
         const previous = JSON.parse(sessionStorage.getItem(key) || "null") as Submission | null;
@@ -69,19 +73,17 @@ export default function RegisterEmoji({ identity, image, controlRef }: { control
   useImperativeHandle(controlRef, () => ({ open }));
   async function submit() {
     if (inFlight.current || !allowed || !bot?.installed || !preview || !emojiName(name) || submission) return;
-    const attempt = { requestId: crypto.randomUUID(), name };
     inFlight.current = true; setBusy(true); setError("");
     try {
       const blob = await (await fetch(preview)).blob();
-      const form = new FormData(); form.set("file", blob, "emoji.png"); form.set("name", name); form.set("requestId", attempt.requestId);
-      setSubmission(attempt); remember(attempt);
-      const response = await fetch(guildUrl("/api/emoji/register", identity?.guild?.id || ""), { method: "POST", body: form, cache: "no-store", signal: AbortSignal.timeout(55_000) });
-      const value = await response.json();
-      if (!response.ok) {
-        // Named validation/authorization/reservation errors happen before Discord is mutated.
-        if (value.code && value.code !== "unavailable") { setSubmission(null); remember(null); }
-        throw new Error(value.error || "登録結果を確認できません。再送せず結果を確認してください。");
+      if (!uploadTicket.current || uploadTicket.current.name !== name) {
+        const ticket = await workshopRequest<AssetUploadTicket>(guildUrl("/api/emoji/register/upload", guildId || ""), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+        uploadTicket.current = { ...ticket, name };
       }
+      await uploadSignedImage(uploadTicket.current, blob);
+      const attempt = { requestId: uploadTicket.current.id, name };
+      setSubmission(attempt); remember(attempt); setCanCancelUnstarted(false);
+      const value = await workshopRequest<RegistrationResult>(guildUrl("/api/emoji/register", guildId || ""), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestId: attempt.requestId }) });
       accept(value as RegistrationResult);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "登録結果を確認できません。結果を再確認してください。"); }
     finally { inFlight.current = false; setBusy(false); }
@@ -90,14 +92,21 @@ export default function RegisterEmoji({ identity, image, controlRef }: { control
     if (!submission || inFlight.current) return;
     inFlight.current = true; setBusy(true); setError("");
     try { accept(await workshopRequest<RegistrationResult>(guildUrl(`/api/emoji/register?requestId=${encodeURIComponent(submission.requestId)}`, identity?.guild?.id || ""))); }
-    catch (cause) { setError(cause instanceof WorkshopRequestError ? cause.message : "結果を取得できません。少し待って再確認してください。"); }
+    catch (cause) { setCanCancelUnstarted(cause instanceof WorkshopRequestError && cause.status === 404); setError(cause instanceof WorkshopRequestError ? cause.message : "結果を取得できません。少し待って再確認してください。"); }
+    finally { inFlight.current = false; setBusy(false); }
+  }
+  async function cancelUnstarted() {
+    if (!submission || inFlight.current) return;
+    inFlight.current = true; setBusy(true); setError("");
+    try { accept(await workshopRequest<RegistrationResult>(guildUrl("/api/emoji/register/cancel", guildId || ""), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(submission) })); setCanCancelUnstarted(false); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "状態を確認できません。"); }
     finally { inFlight.current = false; setBusy(false); }
   }
   return <>
     <dialog ref={dialog} className={styles.dialog} aria-labelledby="register-title" onClose={() => {
       setOpened(false);
       if (outcome?.status === "succeeded") {
-        setSubmission(null); setOutcome(null); setError(""); setName(""); setPreview(null);
+        setSubmission(null); uploadTicket.current = null; setOutcome(null); setError(""); setName(""); setPreview(null);
       }
     }} onCancel={event => { if (busy) event.preventDefault(); }}>
       <header><h2 id="register-title">サーバーに絵文字を追加</h2><button type="button" aria-label="登録画面を閉じる" disabled={busy} onClick={() => dialog.current?.close()}><X size={20} /></button></header>
@@ -124,7 +133,8 @@ export default function RegisterEmoji({ identity, image, controlRef }: { control
         {error && <p role="alert" className={styles.error}>{error}</p>}
         {unresolved && !busy && <p className={styles.notice}>結果の確認では画像を再送しません。同じ名前の登録をやり直す前に、Discord側の一覧も確認してください。</p>}
         <div className={styles.actions}>
-          {unresolved ? <button type="button" disabled={busy || !allowed} onClick={() => void check()}>{busy ? "処理中…" : "登録結果を確認"}</button> : outcome?.status === "succeeded" ? null : submission ? <button type="button" onClick={() => { setSubmission(null); setOutcome(null); setError(""); setPreview(image || null); }}>内容を見直す</button> : <button type="submit" disabled={busy || !allowed || !bot?.installed || !emojiName(name) || !preview}>{busy ? "登録中…" : "この内容で追加"}</button>}
+          {unresolved && canCancelUnstarted && <button type="button" disabled={busy} onClick={() => void cancelUnstarted()}>未送信の登録を取り消す</button>}
+          {unresolved ? <button type="button" disabled={busy || !allowed} onClick={() => void check()}>{busy ? "処理中…" : "登録結果を確認"}</button> : outcome?.status === "succeeded" ? null : submission ? <button type="button" onClick={() => { setSubmission(null); uploadTicket.current = null; setOutcome(null); setError(""); setPreview(image || null); }}>内容を見直す</button> : <button type="submit" disabled={busy || !allowed || !bot?.installed || !emojiName(name) || !preview}>{busy ? "登録中…" : "この内容で追加"}</button>}
           <button type="button" disabled={busy} onClick={() => dialog.current?.close()}>閉じる</button>
         </div>
       </form>

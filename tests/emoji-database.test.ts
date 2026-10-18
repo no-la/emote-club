@@ -99,3 +99,26 @@ test("direct upload SQL isolates DB roles and reserves both objects with durable
     assert.equal((await db.query<{count:number}>("select count(*)::integer as count from public.emoji_asset_uploads")).rows[0].count,10);
   }finally{await db.close();}
 });
+
+
+test("registration staging is private, quota counted, and cancellation blocks delayed creates",async()=>{
+  const db=new PGlite();
+  try{
+    await db.exec("create role anon;create role authenticated;create role service_role bypassrls;create schema storage;create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);");
+    for(const name of ["202610180001_emoji_assets.sql","202610180002_emoji_registrations.sql","202610180003_guild_quotas.sql","202610180004_direct_uploads.sql","202610180005_registration_uploads.sql"])await db.exec(await readFile(new URL("../supabase/migrations/"+name,import.meta.url),"utf8"));
+    const id="00000000-0000-4000-8000-000000000001";
+    const upload=()=>db.query("select * from public.reserve_emoji_registration_upload($1,'123456789012345678','223456789012345678','test_emoji')",[id]);
+    const cancel=()=>db.query<{status:string}>("select * from public.cancel_unstarted_emoji_registration($1,'123456789012345678','223456789012345678','test_emoji')",[id]);
+    for(const role of ["anon","authenticated"]){await db.exec("set role "+role);await assert.rejects(upload(),/permission denied/);await assert.rejects(cancel(),/permission denied/);await db.exec("reset role");}
+    await db.exec("set role service_role");
+    await upload();
+    assert.equal((await db.query<{count:number}>("select count(*)::int as count from public.emoji_assets")).rows[0].count,0);
+    assert.equal((await cancel()).rows[0].status,"failed");
+    // Old request arriving after cancellation cannot acquire the registration reservation.
+    await assert.rejects(db.query("select public.reserve_emoji_registration($1,'123456789012345678','223456789012345678','test_emoji',$2)",[id,"a".repeat(64)]),/request_conflict/);
+    await db.exec("update public.emoji_registrations set status='pending'");
+    assert.equal((await cancel()).rows[0].status,"pending"); // Never cancel a send that already started.
+    await db.query("insert into public.emoji_assets(id,guild_id,owner_id,owner_name,name,bytes,width,height) select ('00000000-0000-4000-9000-'||lpad(n::text,12,'0'))::uuid,'123456789012345678','223456789012345678','owner','cat',4194304,1,1 from generate_series(1,31) n");
+    await assert.rejects(db.query("select public.reserve_emoji_registration_upload('00000000-0000-4000-8000-000000000002','123456789012345678','223456789012345678','cat')"),/asset_quota_exceeded/);
+  }finally{await db.close();}
+});

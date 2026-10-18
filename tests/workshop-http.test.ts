@@ -36,7 +36,7 @@ test("HTTP authentication boundary, OAuth state/PKCE, expiry and CSRF", { timeou
     for (const path of ["/api/emoji/bot?guildId=223456789012345678", "/api/emoji/assets", "/api/emoji/assets/00000000-0000-4000-8000-000000000001/image"]) {
       const result = await request(path); assert.equal(result.status, 401); assert.match(result.headers.get("cache-control")!, /no-store/);
     }
-    for (const [method, path] of [["POST", "/api/emoji/assets/00000000-0000-4000-8000-000000000001/complete"], ["POST", "/api/emoji/register"], ["POST", "/api/emoji/assets"], ["PATCH", "/api/emoji/assets/00000000-0000-4000-8000-000000000001"], ["DELETE", "/api/emoji/assets/00000000-0000-4000-8000-000000000001"], ["POST", "/api/auth/logout"]]) {
+    for (const [method, path] of [["POST", "/api/emoji/register/upload"], ["POST", "/api/emoji/register/cancel"], ["POST", "/api/emoji/assets/00000000-0000-4000-8000-000000000001/complete"], ["POST", "/api/emoji/register"], ["POST", "/api/emoji/assets"], ["PATCH", "/api/emoji/assets/00000000-0000-4000-8000-000000000001"], ["DELETE", "/api/emoji/assets/00000000-0000-4000-8000-000000000001"], ["POST", "/api/auth/logout"]]) {
       assert.equal((await request(path, { method, headers: { Origin: "https://untrusted.example" } })).status, 403);
       if (path !== "/api/auth/logout") assert.equal((await request(path, { method, headers: { Origin: origin } })).status, 401);
     }
