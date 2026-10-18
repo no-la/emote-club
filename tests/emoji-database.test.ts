@@ -69,3 +69,33 @@ test("registration reservation is private, idempotent, serialized and retains un
     await assert.rejects(reserve(6), /registration_throttled/);
   } finally { await db.close(); }
 });
+
+
+test("direct upload SQL isolates DB roles and reserves both objects with durable rate limits", async()=>{
+  const db=new PGlite();
+  try{
+    await db.exec("create role anon; create role authenticated; create role service_role bypassrls; create schema storage; create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);");
+    for(const name of ["202610180001_emoji_assets.sql","202610180003_guild_quotas.sql","202610180004_direct_uploads.sql"]) await db.exec(await readFile(new URL("../supabase/migrations/"+name,import.meta.url),"utf8"));
+    const reserve=(n:number)=>db.query("select * from public.reserve_emoji_asset_upload($1,'123456789012345678','223456789012345678','owner','cat')",["00000000-0000-4000-8000-"+String(n).padStart(12,"0")]);
+    for(const role of ["anon","authenticated"]){
+      await db.exec("set role "+role);
+      await assert.rejects(db.query("select * from public.emoji_asset_uploads"),/permission denied/);
+      await assert.rejects(reserve(1),/permission denied/);
+      await db.exec("reset role");
+    }
+    const bucket=(await db.query<{public:boolean;file_size_limit:number}>("select * from storage.buckets where id='emoji-upload-staging'")).rows[0];
+    assert.equal(bucket.public,false);assert.equal(Number(bucket.file_size_limit),4194304);
+    await db.exec("set role service_role");
+    for(let n=1;n<=3;n++)await reserve(n);
+    await assert.rejects(reserve(4),/upload_throttled/);
+    await db.exec("update public.emoji_asset_uploads set state='ready'");
+    for(let n=4;n<=10;n++){await reserve(n);await db.exec("update public.emoji_asset_uploads set state='ready'");}
+    await db.exec("delete from public.emoji_assets");
+    await assert.rejects(reserve(11),/upload_throttled/);
+    assert.equal((await db.query<{count:number}>("select count(*)::integer as count from public.emoji_asset_uploads")).rows[0].count,10);
+    await db.exec("update public.emoji_asset_uploads set created_at=now()-interval '2 hours'");
+    await db.query("insert into public.emoji_assets(id,guild_id,owner_id,owner_name,name,bytes,width,height) select ('00000000-0000-4000-9000-'||lpad(n::text,12,'0'))::uuid,'123456789012345678','223456789012345678','owner','cat',4194304,1,1 from generate_series(1,21) n");
+    await assert.rejects(reserve(12),/asset_quota_exceeded/);
+    assert.equal((await db.query<{count:number}>("select count(*)::integer as count from public.emoji_asset_uploads")).rows[0].count,10);
+  }finally{await db.close();}
+});

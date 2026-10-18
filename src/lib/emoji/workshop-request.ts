@@ -11,7 +11,12 @@ export async function workshopRequest<T>(url: string, options?: RequestInit): Pr
   const signal = options?.signal ? AbortSignal.any([options.signal, timeout.signal]) : timeout.signal;
   try {
     const response = await fetch(url, { ...options, cache: "no-store", signal });
-    const value = await response.json();
+    let value;
+    try { value = await response.json(); }
+    catch (error) {
+      if (signal.aborted) throw error;
+      throw new WorkshopRequestError("サーバーから正常な応答を受け取れませんでした。接続を確認して再試行してください。", response.status);
+    }
     if (!response.ok) throw new WorkshopRequestError(value.error || "処理できませんでした。もう一度お試しください。", response.status);
     return value as T;
   } catch (error) {

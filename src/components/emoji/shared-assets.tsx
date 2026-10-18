@@ -5,6 +5,7 @@ import MobilePanel, { PanelBody, type MobilePanelControls } from "./mobile-panel
 import Image from "next/image";
 import { Images, Plus, RefreshCw, X, Camera, ImagePlus, MoreHorizontal } from "lucide-react";
 import { assetName, guildUrl, type SharedAsset, type WorkshopIdentity } from "@/lib/emoji/shared";
+import { reserveAssetUpload, sendAssetUpload, type AssetUploadTicket } from "@/lib/emoji/direct-upload";
 import { prepareImage } from "@/lib/emoji/prepare-image";
 import { workshopRequest } from "./workshop-account";
 import styles from "./shared-assets.module.css";
@@ -55,6 +56,8 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
   const active = useRef(true);
   const requestVersion = useRef(0);
   const operation = useRef(false);
+  const uploadTicket = useRef<AssetUploadTicket | null>(null);
+  const [uploadReserved, setUploadReserved] = useState(false);
   const connected = Boolean(identity?.user && identity.guild && identity.storageConfigured);
   const guildId = identity?.guild?.id || "";
   const load = useCallback(async (offset = 0) => {
@@ -83,8 +86,9 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
     return () => URL.revokeObjectURL(url);
   }, [file]);
   async function choose(selected: File, suggestedName: string) {
-    const prepared = await prepareImage(selected);
+    const prepared = await prepareImage(selected, "image/webp");
     if (!active.current) return;
+    uploadTicket.current = null; setUploadReserved(false);
     setUploadError(""); setFile(prepared); setName(suggestedName.slice(0, 80));
     dialog.current?.showModal();
   }
@@ -150,12 +154,13 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
       <p className={styles.notice}>{identity?.guild?.name} のメンバーが利用できるようになります。</p>
       {preview && <div className={styles.uploadPreview} role="img" aria-label="共有する画像のプレビュー" style={{ backgroundImage: `url("${preview}")` }} />}
       <form className={styles.uploadForm} onSubmit={event => { event.preventDefault(); if (!file || !assetName(name)) return; void run(async () => {
-        const form = new FormData(); form.set("file", file); form.set("name", name.trim());
-        const { asset } = await workshopRequest<{ asset: SharedAsset }>(guildUrl("/api/emoji/assets", guildId), { method: "POST", body: form });
+        uploadTicket.current ??= await reserveAssetUpload(name.trim(), guildId);
+        if (active.current) setUploadReserved(true);
+        const { asset } = await sendAssetUpload(uploadTicket.current, file, guildId);
         if (!active.current) return;
-        setAssets(previous => [asset, ...previous]); setNotice(`${asset.name}を共有しました`); closeUpload();
+        setAssets(previous => [asset, ...previous.filter(item => item.id !== asset.id)]); setNotice(`${asset.name}を共有しました`); closeUpload();
       }, true); }}>
-        <label>素材名<input autoFocus required maxLength={80} aria-label="登録する素材名" value={name} onChange={event => setName(event.target.value)} disabled={busy} /></label>
+        <label>素材名<input autoFocus required maxLength={80} aria-label="登録する素材名" value={name} onChange={event => setName(event.target.value)} disabled={busy || uploadReserved} /></label>
         <small>画像として共有します。文字やレイヤーの編集状態は含みません。</small>
         {uploadError && <p className={styles.error} role="alert">{uploadError}</p>}
         <div className={styles.uploadActions}><button type="button" disabled={busy} onClick={closeUpload}>取消</button><button disabled={busy || !file || !assetName(name)}>{busy ? "共有中…" : "サーバーに共有"}</button></div>

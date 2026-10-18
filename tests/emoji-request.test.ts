@@ -34,3 +34,9 @@ test("successful JSON and server error status are preserved", async t => {
   t.mock.method(globalThis, "fetch", async () => Response.json({ error: "denied" }, { status: 403 }));
   await assert.rejects(workshopRequest("/assets"), (e: unknown) => e instanceof WorkshopRequestError && e.status === 403 && e.message === "denied");
 });
+
+
+test("HTML proxy errors give an actionable message without exposing response bodies",async t=>{
+  t.mock.method(globalThis,"fetch",async()=>new Response("<!DOCTYPE html>proxy error",{status:403}));
+  await assert.rejects(workshopRequest("/assets"),(e:unknown)=>e instanceof WorkshopRequestError&&e.status===403&&!e.message.includes("DOCTYPE"));
+});

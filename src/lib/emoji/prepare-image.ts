@@ -2,7 +2,7 @@ import { fitImage, inspectImage, MAX_INPUT_IMAGE_BYTES, validateImageDimensions 
 import { SHARED_IMAGE_BYTES } from "./shared";
 
 /** Normalize locally; the original file is never modified or uploaded here. */
-export async function prepareImage(file: File): Promise<File> {
+export async function prepareImage(file: File, format: "image/png" | "image/webp" = "image/png"): Promise<File> {
   if (!file.size || file.size > MAX_INPUT_IMAGE_BYTES) throw new Error("画像は20 MiB以下にしてください。");
   inspectImage(new Uint8Array(await file.arrayBuffer()));
   const url = URL.createObjectURL(file);
@@ -24,9 +24,9 @@ export async function prepareImage(file: File): Promise<File> {
       if (!context) throw new Error("画像を縮小できませんでした。別の画像をお試しください。");
       context.imageSmoothingEnabled = true; context.imageSmoothingQuality = "high";
       context.drawImage(source, 0, 0, width, height);
-      const blob = await new Promise<Blob | null>(resolve => canvas!.toBlob(resolve, "image/png"));
+      const blob = await new Promise<Blob | null>(resolve => canvas!.toBlob(resolve, format, 0.95));
       if (!blob) throw new Error("画像を変換できませんでした。別の画像をお試しください。");
-      if (blob.size <= maxBytes) return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".png", { type: "image/png" });
+      if (blob.size <= maxBytes) return new File([blob], file.name.replace(/\.[^.]+$/, "") + (blob.type === "image/webp" ? ".webp" : ".png"), { type: blob.type });
       width = Math.max(1, Math.floor(width * 0.75)); height = Math.max(1, Math.floor(height * 0.75));
     }
     throw new Error("画像を十分に小さくできませんでした。別の画像をお試しください。");
