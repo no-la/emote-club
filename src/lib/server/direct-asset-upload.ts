@@ -68,7 +68,7 @@ export async function completeAssetUpload(id: string, member: Member) {
 
 /** Opportunistic, bounded cleanup on authenticated listing/upload. Never release quota first. */
 export async function cleanupAssetUploads() {
-  const store = assetStore();
+  const store = assetStore(AbortSignal.timeout(5_000));
   const expired = await store.from("emoji_asset_uploads").select("*").lt("expires_at", new Date().toISOString()).order("expires_at").limit(5);
   if (expired.error) throw expired.error;
   for (const upload of expired.data as UploadRow[]) {

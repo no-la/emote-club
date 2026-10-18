@@ -11,11 +11,11 @@ export type AssetRow = {
   id: string; guild_id: string; owner_id: string; owner_name: string; name: string;
   bytes: number; width: number; height: number; status: SharedAsset["status"]; created_at: string;
 };
-export function assetStore() {
+export function assetStore(signal?: AbortSignal) {
   if (!storageConfigured()) throw new ApiError(503, "storage_not_configured", "共有素材は準備中です。");
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store", signal: init?.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(15_000)]) : AbortSignal.timeout(15_000) }) },
+    global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store", signal: AbortSignal.any([AbortSignal.timeout(15_000), ...(init?.signal ? [init.signal] : []), ...(signal ? [signal] : [])]) }) },
   });
 }
 export function publicAsset(row: AssetRow, member: Member): SharedAsset {
