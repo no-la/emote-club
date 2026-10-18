@@ -39,6 +39,23 @@ test("production requires HTTPS, explicit Discord settings, and same-origin writ
   process.env.SESSION_PASSWORD = "short"; assert.equal(authConfig(), null);
 });
 
+test("forwarded host is opt-in and requires a single exact public host with a valid Origin", () => {
+  configure();
+  const request = (host: string | null, origin = "http://localhost:3000") => new Request("http://internal:3000/api/emoji/assets", {
+    headers: { Host: "internal:3000", Origin: origin, ...(host === null ? {} : { "X-Forwarded-Host": host }) },
+  });
+  delete process.env.TRUST_PROXY_HOST;
+  assert.throws(() => requireSameOrigin(request("localhost:3000")), errorCode("invalid_origin"));
+  process.env.TRUST_PROXY_HOST = "1";
+  assert.doesNotThrow(() => requireSameOrigin(request("localhost:3000")));
+  for (const host of [null, "untrusted.example", "localhost:3000, untrusted.example", "untrusted.example, localhost:3000"]) {
+    assert.throws(() => requireSameOrigin(request(host)), errorCode("invalid_origin"));
+  }
+  for (const origin of ["https://untrusted.example", "null", ""]) {
+    assert.throws(() => requireSameOrigin(request("localhost:3000", origin)), errorCode("invalid_origin"));
+  }
+});
+
 test("session cookie is encrypted, HttpOnly, Secure and cannot be forged", async () => {
   const values = new Map<string, string>();
   const writes: { name: string; options: unknown }[] = [];

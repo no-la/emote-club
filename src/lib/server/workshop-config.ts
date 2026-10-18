@@ -19,8 +19,12 @@ export function requireAuthConfig() {
 }
 export function storageConfigured() { return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY); }
 export function canonicalHost(request: Request) {
-  // Next may use an internal hostname in request.url. Host is the browser's requested host.
-  return (request.headers.get("host") || new URL(request.url).host) === new URL(requireAuthConfig().origin).host;
+  // Enable only behind a proxy that overwrites X-Forwarded-Host with the public host.
+  // Do not accept a list or fall back to Host when that deployment contract is enabled.
+  const host = process.env.TRUST_PROXY_HOST === "1"
+    ? request.headers.get("x-forwarded-host")
+    : request.headers.get("host") || new URL(request.url).host;
+  return host === new URL(requireAuthConfig().origin).host;
 }
 export function requireSameOrigin(request: Request) {
   const config = requireAuthConfig();

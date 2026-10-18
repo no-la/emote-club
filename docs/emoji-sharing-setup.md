@@ -18,6 +18,8 @@ Emote Club専用プロジェクトで `supabase/migrations` のSQLを番号順�
 
 ## 公開
 
+`TRUST_PROXY_HOST=1` は、公開ホスト名で `X-Forwarded-Host` を上書きするプロキシの背後でのみ設定します。通常のローカル起動は未設定または `0`。有効時はヘッダーの単一値を `SITE_URL` と完全一致で検証し、更新APIはOriginも検証します。
+
 `SESSION_PASSWORD` はランダムな32文字以上、`SITE_URL` は公開HTTPS originを設定。秘密情報はデプロイナウのsensitive環境変数へ登録し、リポジトリへ含めません。
 Next.jsは `output: standalone`。デプロイナウでは `npm ci --ignore-scripts` / `npm run build` を使用。npm用package-lock.jsonもコミットし、pnpm-lock.yamlと依存バージョンを揃えます。
 `lolipop deploy --name emote-club --framework next` で初回公開。以降は既存project IDを指定して公開します。GitHubへのpushのみで自動公開される設定は別途連携が必要です。

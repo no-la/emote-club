@@ -18,7 +18,7 @@ test("HTTP authentication boundary, OAuth state/PKCE, expiry and CSRF", { timeou
   const guildId = "223456789012345678";
   const server = spawn(process.execPath, ["--import", "./tests/fixtures/discord-fetch.mjs", "node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", String(port)], {
     cwd: process.cwd(), stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, NODE_ENV: "production", SITE_URL: origin, DISCORD_CLIENT_ID: "123456789012345678", DISCORD_CLIENT_SECRET: "test-only-unused-secret", DISCORD_GUILD_ID: guildId, SESSION_PASSWORD: password, SUPABASE_URL: "", SUPABASE_SERVICE_ROLE_KEY: "", DISCORD_BOT_TOKEN: "test-only-bot" },
+    env: { ...process.env, NODE_ENV: "production", TRUST_PROXY_HOST: "1", SITE_URL: origin, DISCORD_CLIENT_ID: "123456789012345678", DISCORD_CLIENT_SECRET: "test-only-unused-secret", DISCORD_GUILD_ID: guildId, SESSION_PASSWORD: password, SUPABASE_URL: "", SUPABASE_SERVICE_ROLE_KEY: "", DISCORD_BOT_TOKEN: "test-only-bot" },
   });
   let logs = "";
   server.stdout.on("data", chunk => { logs += String(chunk); }); server.stderr.on("data", chunk => { logs += String(chunk); });
@@ -40,6 +40,11 @@ test("HTTP authentication boundary, OAuth state/PKCE, expiry and CSRF", { timeou
       assert.equal((await request(path, { method, headers: { Origin: "https://untrusted.example" } })).status, 403);
       if (path !== "/api/auth/logout") assert.equal((await request(path, { method, headers: { Origin: origin } })).status, 401);
     }
+    const wrongProxy = await request("/api/auth/discord", { headers: { "X-Forwarded-Host": "untrusted.example" } });
+    assert.equal(wrongProxy.status, 303);
+    assert.equal(wrongProxy.headers.get("location"), `${origin}/api/auth/discord`);
+    assert.equal(wrongProxy.headers.get("set-cookie"), null);
+    assert.equal((await request("/api/auth/logout", { method: "POST", headers: { Origin: origin, "X-Forwarded-Host": "untrusted.example" } })).status, 403);
     const start = await request("/api/auth/discord?next=https://untrusted.example");
     assert.equal(start.status, 303);
     const authorize = new URL(start.headers.get("location")!);
