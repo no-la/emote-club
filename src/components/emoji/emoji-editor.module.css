@@ -316,3 +316,10 @@
   .workshop[data-mobile-panel=""] .inspector { display: none; }
   .workshop[data-mobile-panel=""] .stage { width: min(calc(100cqw - 24px), calc(100cqh - 24px), 768px); }
 }
+
+/* Make collapsing a mobile panel discoverable without adding another toolbar. */
+.mobileClose { display: none; }
+@media (max-width: 900px) {
+  .mobileClose, .mobileCategories .mobileClose { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 3px; min-height: 44px; padding: 0 8px; border: 0; border-radius: 8px; background: #3a3e46; color: #e4e7ec; font-size: 12px; white-space: nowrap; cursor: pointer; }
+  .mobileCategories .mobileClose { margin-left: auto; position: sticky; right: 0; }
+}

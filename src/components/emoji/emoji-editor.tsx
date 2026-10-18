@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState, type PointerEvent } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, RotateCcw, Sparkles, Images, Layers, SlidersHorizontal, ChevronUp, X, Undo2, Redo2, Menu, Plus } from "lucide-react";
+import { ArrowLeft, Download, RotateCcw, Sparkles, Images, Layers, SlidersHorizontal, ChevronDown, ChevronUp, X, Undo2, Redo2, Menu, Plus } from "lucide-react";
 import { clamp, initialEffects, createTextLayer, layerName, STAGE_SIZE, type EffectStack, type ElementId, type EmojiDraft, type Transform, type TextAppearance } from "@/lib/emoji/model";
 import type { createEmojiRenderer, RenderResult, ElementBounds } from "@/lib/emoji/renderer";
 import { loadFont } from "@/lib/emoji/fonts";
@@ -49,6 +49,7 @@ export default function EmojiEditor() {
     viewport?.addEventListener("scroll", resize);
     return () => { viewport?.removeEventListener("resize", resize); viewport?.removeEventListener("scroll", resize); };
   }, []);
+  const closePanelButton = <button type="button" className={styles.mobileClose} aria-label="編集パネルを閉じる" onClick={() => { finishTyping(); setExpanded(false); setMobileTab(""); }}><ChevronDown size={16} />閉じる</button>;
   const expandButton = <button type="button" className={styles.mobileExpand} aria-label={expanded ? "パネルを縮小" : "パネルを拡大"} aria-expanded={expanded} onClick={() => setExpanded(value => !value)}><ChevronUp size={18} style={{ transform: expanded ? "rotate(180deg)" : undefined }} /></button>;
   const [ready, setReady] = useState(false);
   const [result, setResult] = useState<(RenderResult & { draft: EmojiDraft }) | null>(null);
@@ -294,11 +295,11 @@ export default function EmojiEditor() {
     </div>
     <div className={styles.workspace}>
       <aside className={styles.assetSidebar} aria-label="共有素材とレイヤー">
-        <SharedAssets key={`${identity?.user?.id || "guest"}:${identity?.guild?.id || ""}`} controlRef={shareControl} headingAction={expandButton} identity={identity} identityError={identityError}
+        <SharedAssets key={`${identity?.user?.id || "guest"}:${identity?.guild?.id || ""}`} controlRef={shareControl} headingAction={<>{expandButton}{closePanelButton}</>} identity={identity} identityError={identityError}
           canAdd={!loadingImage && draft.layers.length < MAX_LAYERS} onUse={file => loadImage(file)} onRefreshIdentity={refreshIdentity}
           canvasImage={canExport ? result?.url : undefined} canvasName={draft.layers.filter(layer => layer.kind === "text").map(layer => layer.text).join(" ").slice(0, 80)} />
         <section className={styles.layerSidebar} aria-label="レイヤー一覧">
-          <div className={styles.sidebarHeading}><h2>レイヤー</h2><small>上が手前</small>{expandButton}</div>
+          <div className={styles.sidebarHeading}><h2>レイヤー</h2><small>上が手前</small>{expandButton}{closePanelButton}</div>
           <LayerPanel layers={draft.layers} selected={panel === "layers" ? selectedLayer : undefined} loading={loadingImage} imageError={imageError}
             onSelect={selectLayer} onAddText={addText} onLoadImage={(file, id) => { void loadImage(file, id); }}
             onReorder={reorderLayer} onMove={moveLayer} onDuplicate={duplicateLayer} onRemove={removeLayer} />
@@ -318,8 +319,6 @@ export default function EmojiEditor() {
             <div ref={host} className={styles.canvasHost} />
             {ready && !hasContent && <p className={styles.empty}>文字か画像を追加</p>}
             {!ready && !error && <p className={styles.empty}>読み込み中…</p>}
-            {/* Refs in this map are accessed only by pointer/keyboard event handlers. */}
-            {/* eslint-disable-next-line react-hooks/refs */}
             {result && draft.layers.map((layer, index) => {
               const id = layer.id;
               const objectLabel = `レイヤー${index + 1}（${layerName(layer)}）`;
@@ -378,6 +377,7 @@ export default function EmojiEditor() {
         <div className={styles.mobileCategories} aria-label="編集項目">
           {mobileTab === "effects" ? <><button type="button" aria-pressed={panel === "layers"} disabled={!selectedLayer} onClick={() => setPanel("layers")}>このレイヤー</button><button type="button" aria-pressed={panel === "effects"} onClick={() => setPanel("effects")}>全体</button></> : <>{[["text", selectedLayer?.kind === "image" ? "画像" : "文字"], ["color", "色"], ["transform", "サイズ"], ["advanced", "詳細"]].filter(([key]) => selectedLayer?.kind !== "image" || key === "text" || key === "transform" || key === "advanced").map(([key, label]) => <button key={key} type="button" aria-pressed={activeEditSection === key} onClick={() => setEditSection(key)}>{label}</button>)}</>}
           {mobileTab === "edit" && <button type="button" className={styles.addTextButton} aria-label="文字を追加" disabled={loadingImage || draft.layers.length >= MAX_LAYERS} onClick={addText}><Plus size={18} /></button>}
+          {closePanelButton}
         </div>
         <div className={styles.settings} key={panel === "layers" ? selectedLayer?.id ?? "empty" : "all"}>
           {panel === "layers" && selectedLayer && <>
