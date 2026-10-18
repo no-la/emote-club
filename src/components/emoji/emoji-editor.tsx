@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState, type PointerEvent } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, RotateCcw, Sparkles, Images, Layers, SlidersHorizontal, ChevronDown, ChevronUp, X, Undo2, Redo2, Menu, Plus } from "lucide-react";
+import { ArrowLeft, Download, RotateCcw, Sparkles, Images, Layers, SlidersHorizontal, ChevronUp, X, Undo2, Redo2, Menu, Plus } from "lucide-react";
 import { clamp, initialEffects, createTextLayer, layerName, STAGE_SIZE, type EffectStack, type ElementId, type EmojiDraft, type Transform, type TextAppearance } from "@/lib/emoji/model";
 import type { createEmojiRenderer, RenderResult, ElementBounds } from "@/lib/emoji/renderer";
 import { loadFont } from "@/lib/emoji/fonts";
@@ -49,7 +49,7 @@ export default function EmojiEditor() {
     viewport?.addEventListener("scroll", resize);
     return () => { viewport?.removeEventListener("resize", resize); viewport?.removeEventListener("scroll", resize); };
   }, []);
-  const closePanelButton = <button type="button" className={styles.mobileClose} aria-label="編集パネルを閉じる" onClick={() => { finishTyping(); setExpanded(false); setMobileTab(""); }}><ChevronDown size={16} />閉じる</button>;
+  const closePanelButton = <button type="button" className={styles.mobileClose} aria-label="編集パネルを閉じる" onClick={() => { finishTyping(); setExpanded(false); setMobileTab(""); }}><X size={20} /></button>;
   const expandButton = <button type="button" className={styles.mobileExpand} aria-label={expanded ? "パネルを縮小" : "パネルを拡大"} aria-expanded={expanded} onClick={() => setExpanded(value => !value)}><ChevronUp size={18} style={{ transform: expanded ? "rotate(180deg)" : undefined }} /></button>;
   const [ready, setReady] = useState(false);
   const [result, setResult] = useState<(RenderResult & { draft: EmojiDraft }) | null>(null);
