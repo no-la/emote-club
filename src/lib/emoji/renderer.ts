@@ -1,4 +1,4 @@
-import { Application, CanvasTextMetrics, Container, Rectangle, Sprite, Text, Texture } from "pixi.js";
+import { AlphaFilter, Application, CanvasTextMetrics, Container, Rectangle, Sprite, Text, Texture } from "pixi.js";
 import { createEffectPipeline } from "./effect-pipeline";
 import { FONT_FAMILIES, OUTPUT_SIZE, STAGE_SIZE, type EmojiDraft, type ElementId } from "./model";
 
@@ -17,6 +17,7 @@ export async function createEmojiRenderer(host: HTMLElement) {
   const artwork = new Container();
   app.stage.addChild(artwork);
   const objects = new Map<ElementId, Sprite | Text>();
+  const opacityFilters = new Map<ElementId, AlphaFilter>();
   const layerRoots = new Map<ElementId, Container>();
   const textures = new Map<HTMLImageElement, Texture>();
   const globalEffects = createEffectPipeline();
@@ -31,6 +32,7 @@ export async function createEmojiRenderer(host: HTMLElement) {
         if (!ids.has(id)) {
           const root = layerRoots.get(id)!;
           root.filters = [];
+          opacityFilters.get(id)?.destroy(); opacityFilters.delete(id);
           layerEffects.get(id)?.destroy(); layerEffects.delete(id);
           root.destroy({ children: true }); layerRoots.delete(id); objects.delete(id);
         }
@@ -49,6 +51,7 @@ export async function createEmojiRenderer(host: HTMLElement) {
           root.addChild(object);
           root.filterArea = new Rectangle(0, 0, STAGE_SIZE, STAGE_SIZE);
           layerRoots.set(layer.id, root);
+          opacityFilters.set(layer.id, new AlphaFilter());
           artwork.addChild(root);
           layerEffects.set(layer.id, createEffectPipeline());
         }
@@ -83,7 +86,11 @@ export async function createEmojiRenderer(host: HTMLElement) {
         }
         object.position.set(layer.transform.x, layer.transform.y);
         root.visible = object.visible;
-        root.filters = layerEffects.get(layer.id)!.update(layer);
+        const effects = layerEffects.get(layer.id)!.update(layer);
+        const opacity = opacityFilters.get(layer.id)!;
+        opacity.alpha = layer.opacity ?? 1;
+        // Fade the completed layer, including its outlines, shadows and effects.
+        root.filters = opacity.alpha < 1 ? [...effects, opacity] : effects;
         if (object.visible) {
           const b = object.getBounds();
           bounds[layer.id] = { x: b.x, y: b.y, width: b.width, height: b.height };
@@ -119,6 +126,8 @@ export async function createEmojiRenderer(host: HTMLElement) {
         pipeline.destroy();
       }
       layerEffects.clear();
+      for (const filter of opacityFilters.values()) filter.destroy();
+      opacityFilters.clear();
       app.destroy(true, { children: true, texture: false, textureSource: false });
       for (const texture of textures.values()) texture.destroy(true);
       textures.clear();

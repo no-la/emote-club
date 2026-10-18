@@ -174,7 +174,7 @@ export default function EmojiEditor() {
       if (element.naturalWidth * element.naturalHeight > 16_000_000) throw new Error("large");
       if (!mounted.current || version !== uploadVersion.current) return;
       const id = replaceId ?? crypto.randomUUID();
-      setDraft(previous => ({ ...previous, layers: replaceId ? previous.layers.map(layer => layer.id === id && layer.kind === "image" ? { ...layer, source: element, name: file.name } : layer) : previous.layers.length < MAX_LAYERS ? [...previous.layers, { ...initialEffects(), id, kind: "image", source: element, name: file.name, transform: { x: 256, y: 256, scale: 1 } }] : previous.layers }));
+      setDraft(previous => ({ ...previous, layers: replaceId ? previous.layers.map(layer => layer.id === id && layer.kind === "image" ? { ...layer, source: element, name: file.name } : layer) : previous.layers.length < MAX_LAYERS ? [...previous.layers, { ...initialEffects(), id, kind: "image", opacity: 1, source: element, name: file.name, transform: { x: 256, y: 256, scale: 1 } }] : previous.layers }));
       if (!replaceId || draft.layers.some(layer => layer.id === replaceId)) { selectLayer(id); }
     } catch {
       if (mounted.current && version === uploadVersion.current) setImageError("画像を読み込めませんでした。縦×横が1600万画素以下の別の画像をお試しください。");
@@ -335,6 +335,7 @@ export default function EmojiEditor() {
           {panel === "layers" && selectedLayer && <>
             <LayerAppearance layer={selectedLayer} loading={loadingImage} onTextChange={updateText} onLoadImage={(file, id) => { void loadImage(file, id); }} />
             {currentTransform && <div className={styles.transform}>
+              <Slider label="不透明度" value={Math.round((selectedLayer.opacity ?? 1) * 100)} min={0} max={100} unit="%" onChange={value => setDraft(previous => ({ ...previous, layers: previous.layers.map(layer => layer.id === selectedLayer.id ? { ...layer, opacity: value / 100 } : layer) }))} />
               <Slider label="大きさ" value={Math.round(currentTransform.scale * 100)} min={20} max={400} unit="%" onChange={value => transform(selectedLayer.id, { scale: value / 100 })} />
               <details className={styles.details}>
                 <summary>位置を数値で調整</summary>

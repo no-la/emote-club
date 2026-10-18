@@ -30,8 +30,8 @@ export type EffectStack = {
     rgb: { strength: number; angle: number };
   };
 };
-export type TextLayer = TextAppearance & EffectStack & { id: ElementId; kind: "text"; text: string; transform: Transform };
-export type ImageLayer = EffectStack & { id: ElementId; kind: "image"; source: HTMLImageElement; name: string; transform: Transform };
+export type TextLayer = TextAppearance & EffectStack & { id: ElementId; kind: "text"; text: string; opacity: number; transform: Transform };
+export type ImageLayer = EffectStack & { id: ElementId; kind: "image"; source: HTMLImageElement; name: string; opacity: number; transform: Transform };
 export type EmojiLayer = TextLayer | ImageLayer;
 export type EmojiDraft = EffectStack & { layers: EmojiLayer[] };
 export function initialEffects(): EffectStack {
@@ -64,7 +64,7 @@ export const FONT_FAMILIES = Object.fromEntries(Object.entries(FONTS).map(([id, 
   [id, font.file ? `"${font.family}", sans-serif` : font.family])) as Record<FontId, string>;
 export function createTextLayer(id: string, text = "文字"): TextLayer {
   return {
-    ...initialEffects(), id, kind: "text", text, font: "dela", color: "#ffe477", outlineColor: "#292329",
+    ...initialEffects(), id, kind: "text", text, opacity: 1, font: "dela", color: "#ffe477", outlineColor: "#292329",
     letterSpacing: 0, lineSpacing: 0, outline: 10, shadow: 0, shadowColor: "#121218", shadowBlur: 0,
     transform: { x: 256, y: 256, scale: 1 },
   };
