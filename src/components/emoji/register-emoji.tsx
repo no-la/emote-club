@@ -134,7 +134,7 @@ export default function RegisterEmoji({ identity, image, controlRef }: { control
         {unresolved && !busy && <p className={styles.notice}>結果の確認では画像を再送しません。同じ名前の登録をやり直す前に、Discord側の一覧も確認してください。</p>}
         <div className={styles.actions}>
           {unresolved && canCancelUnstarted && <button type="button" disabled={busy} onClick={() => void cancelUnstarted()}>未送信の登録を取り消す</button>}
-          {unresolved ? <button type="button" disabled={busy || !allowed} onClick={() => void check()}>{busy ? "処理中…" : "登録結果を確認"}</button> : outcome?.status === "succeeded" ? null : submission ? <button type="button" onClick={() => { setSubmission(null); uploadTicket.current = null; setOutcome(null); setError(""); setPreview(image || null); }}>内容を見直す</button> : <button type="submit" disabled={busy || !allowed || !bot?.installed || !emojiName(name) || !preview}>{busy ? "登録中…" : "この内容で追加"}</button>}
+          {unresolved ? <button type="button" disabled={busy || !allowed} onClick={() => void check()}>{busy ? "処理中…" : "登録結果を確認"}</button> : outcome?.status === "succeeded" ? null : submission ? <button type="button" onClick={event => { event.preventDefault(); setSubmission(null); uploadTicket.current = null; setOutcome(null); setError(""); setPreview(image || null); }}>内容を見直す</button> : <button type="submit" disabled={busy || !allowed || !bot?.installed || !emojiName(name) || !preview}>{busy ? "登録中…" : "この内容で追加"}</button>}
           <button type="button" disabled={busy} onClick={() => dialog.current?.close()}>閉じる</button>
         </div>
       </form>
