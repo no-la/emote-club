@@ -3,7 +3,7 @@ import { createEffectPipeline } from "./effect-pipeline";
 import { FONT_FAMILIES, OUTPUT_SIZE, STAGE_SIZE, type EmojiDraft, type ElementId } from "./model";
 
 export type ElementBounds = { x: number; y: number; width: number; height: number };
-export type RenderResult = { url: string; bounds: Partial<Record<ElementId, ElementBounds>> };
+export type RenderResult = { url: string; exportUrl: string; bounds: Partial<Record<ElementId, ElementBounds>> };
 
 export async function createEmojiRenderer(host: HTMLElement) {
   const app = new Application();
@@ -114,7 +114,7 @@ export async function createEmojiRenderer(host: HTMLElement) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(extracted, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
-      return { url: output.toDataURL("image/png"), bounds };
+      return { url: output.toDataURL("image/png"), exportUrl: extracted.toDataURL("image/png"), bounds };
     },
     destroy() {
       canvas.remove();

@@ -247,7 +247,7 @@ export default function EmojiEditor() {
       <button className={styles.download} type="button" disabled={!canExport} onClick={() => {
         if (!result || !canExport) return;
         const link = document.createElement("a");
-        link.href = result.url; link.download = "hukidamari-emoji.png"; link.click();
+        link.href = result.exportUrl; link.download = "emote-club.png"; link.click();
       }}><Download size={16} /> PNGを保存</button>
     </div>
     <div className={styles.workspace}>
@@ -322,7 +322,7 @@ export default function EmojiEditor() {
             <span className={styles.smallEmoji} role="img" aria-label="32pxの絵文字" style={{ backgroundImage: result ? `url("${result.url}")` : undefined }} />
             <span className={styles.tinyEmoji} role="img" aria-label="16pxの絵文字" style={{ backgroundImage: result ? `url("${result.url}")` : undefined }} />
           </div>
-          <span className={styles.muted}>128 × 128 · 透明PNG</span>
+          <span className={styles.muted}>PNG保存 512 × 512 · Discord 128 × 128</span>
         </div>
         {error && <p className={styles.error} role="alert">{error}</p>}
       </section>
