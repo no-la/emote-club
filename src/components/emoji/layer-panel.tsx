@@ -123,7 +123,7 @@ function TextSettings({ layer, onChange }: { layer: TextLayer; onChange: (change
     <div className={styles.textGroup}><label className={styles.field}><span>文字 <small>{layer.text.length}/40</small></span>
       <textarea rows={2} maxLength={40} value={layer.text} placeholder="文字を入力" onChange={event => onChange({ text: event.target.value })} />
     </label>
-    <FontPicker value={layer.font} text={layer.text} onChange={font => onChange({ font })} /></div>
+    <div className={styles.fontGroup}><FontPicker value={layer.font} text={layer.text} onChange={font => onChange({ font })} /></div></div>
     <div className={styles.spacingGroup}>
     <div className={styles.appearance}>
       <Slider label="字間" value={layer.letterSpacing ?? 0} min={-30} max={100} unit="%" onChange={letterSpacing => onChange({ letterSpacing })} />
@@ -134,7 +134,7 @@ function TextSettings({ layer, onChange }: { layer: TextLayer; onChange: (change
       <ColorPalette label="縁の色" value={layer.outlineColor} onChange={outlineColor => onChange({ outlineColor })} />
       <Slider label="縁の太さ" value={layer.outline} min={0} max={24} onChange={outline => onChange({ outline })} />
     </div>
-    <div className={`${styles.appearance} ${styles.shadowSettings}`}>
+    </div><div className={styles.shadowGroup}><div className={`${styles.appearance} ${styles.shadowSettings}`}>
       <ColorPalette label="影の色" value={layer.shadowColor} onChange={shadowColor => onChange({ shadowColor })} />
       <Slider label="影の距離" value={layer.shadow} min={0} max={24} onChange={shadow => onChange({ shadow })} />
       <Slider label="ぼかし" value={layer.shadowBlur} min={0} max={24} onChange={shadowBlur => onChange({ shadowBlur })} />

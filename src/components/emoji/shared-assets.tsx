@@ -107,7 +107,7 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
     });
   }
   useImperativeHandle(controlRef, () => ({ shareCanvas }));
-  return <section className={styles.library} aria-labelledby="shared-assets-title">
+  return <section className={styles.library} data-connected={connected} aria-labelledby="shared-assets-title">
     <header className={styles.libraryHeading}><h2 id="shared-assets-title"><Images size={16} />共有素材</h2><span className={styles.mobileHeadingAction}>{headingAction}</span>
       <button type="button" aria-label="共有素材を更新" title="一覧を更新" disabled={!connected || busy || loading} onClick={() => void load()}><RefreshCw size={14} /></button>
     </header>

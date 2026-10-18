@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState, type PointerEvent } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, RotateCcw, Sparkles, Type, Images, Layers, SlidersHorizontal, ChevronUp, X, Undo2, Redo2 } from "lucide-react";
+import { ArrowLeft, Download, RotateCcw, Sparkles, Images, Layers, SlidersHorizontal, ChevronUp, X, Undo2, Redo2, Menu, Plus } from "lucide-react";
 import { clamp, initialEffects, createTextLayer, layerName, MAX_IMAGE_BYTES, STAGE_SIZE, type EffectStack, type ElementId, type EmojiDraft, type Transform, type TextAppearance } from "@/lib/emoji/model";
 import type { createEmojiRenderer, RenderResult, ElementBounds } from "@/lib/emoji/renderer";
 import { loadFont } from "@/lib/emoji/fonts";
@@ -12,6 +12,7 @@ import EffectEditor from "./effect-editor";
 import SharedAssets, { type SharedAssetsHandle } from "./shared-assets";
 import RegisterEmoji, { type RegisterEmojiHandle } from "./register-emoji";
 import { useWorkshopIdentity, WorkshopAccount } from "./workshop-account";
+import { createLayerId } from "@/lib/emoji/client-id";
 import { snapAxis } from "@/lib/emoji/snapping";
 import { useDraftHistory } from "./use-draft-history";
 import styles from "./emoji-editor.module.css";
@@ -25,6 +26,9 @@ export default function EmojiEditor() {
   const [panel, setPanel] = useState<"layers" | "effects">("layers");
   const [mobileTab, setMobileTab] = useState("materials");
   const [editSection, setEditSection] = useState("text");
+  const [typing, setTyping] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
   const [expanded, setExpanded] = useState(false);
   const root = useRef<HTMLElement>(null);
   const exportDialog = useRef<HTMLDialogElement>(null);
@@ -105,6 +109,7 @@ export default function EmojiEditor() {
 
   const selected = draft.layers.some(layer => layer.id === selectedId) ? selectedId : draft.layers.at(-1)?.id ?? null;
   const selectedLayer = draft.layers.find(layer => layer.id === selected);
+  const activeEditSection = selectedLayer?.kind === "image" && editSection === "color" ? "text" : editSection;
   function updateLayerEffects(id: string, stack: EffectStack) {
     setDraft(previous => ({ ...previous, layers: previous.layers.map(layer => layer.id === id ? { ...layer, ...stack } : layer) }));
   }
@@ -117,9 +122,9 @@ export default function EmojiEditor() {
   function selectLayer(id: string) { setSelected(id); setPanel("layers"); }
   function addText() {
     if (loadingImage || draft.layers.length >= MAX_LAYERS) return;
-    const layer = createTextLayer(crypto.randomUUID());
+    const layer = createTextLayer(createLayerId());
     setDraft(previous => ({ ...previous, layers: [...previous.layers, layer] }));
-    selectLayer(layer.id); setMobileTab("edit"); setEditSection("text");
+    selectLayer(layer.id); setExpanded(false); setMobileTab("edit"); setEditSection("text");
   }
   function moveLayer(id: string, delta: number) {
     setDraft(previous => {
@@ -146,7 +151,7 @@ export default function EmojiEditor() {
   function duplicateLayer(id: string) {
     const original = draft.layers.find(layer => layer.id === id);
     if (!original || loadingImage || draft.layers.length >= MAX_LAYERS) return;
-    const copy = { ...original, ...structuredClone({ effects: original.effects, effectSettings: original.effectSettings }), id: crypto.randomUUID(), transform: { ...original.transform, x: clamp(original.transform.x + 16, 0, STAGE_SIZE), y: clamp(original.transform.y + 16, 0, STAGE_SIZE) } };
+    const copy = { ...original, ...structuredClone({ effects: original.effects, effectSettings: original.effectSettings }), id: createLayerId(), transform: { ...original.transform, x: clamp(original.transform.x + 16, 0, STAGE_SIZE), y: clamp(original.transform.y + 16, 0, STAGE_SIZE) } };
     setDraft(previous => {
       const layers = [...previous.layers];
       layers.splice(layers.findIndex(layer => layer.id === id) + 1, 0, copy);
@@ -198,7 +203,7 @@ export default function EmojiEditor() {
       await element.decode();
       if (element.naturalWidth * element.naturalHeight > 16_000_000) throw new Error("large");
       if (!mounted.current || version !== uploadVersion.current) return;
-      const id = replaceId ?? crypto.randomUUID();
+      const id = replaceId ?? createLayerId();
       setDraft(previous => ({ ...previous, layers: replaceId ? previous.layers.map(layer => layer.id === id && layer.kind === "image" ? { ...layer, source: element, name: file.name } : layer) : previous.layers.length < MAX_LAYERS ? [...previous.layers, { ...initialEffects(), id, kind: "image", opacity: 1, source: element, name: file.name, transform: { x: 256, y: 256, scale: 1 } }] : previous.layers }));
       if (!replaceId || draft.layers.some(layer => layer.id === replaceId)) { selectLayer(id); }
     } catch {
@@ -265,16 +270,30 @@ export default function EmojiEditor() {
   const currentResult = result?.draft === draft && !error;
   const canExport = ready && hasContent && currentResult && !loadingImage;
 
+  function finishTyping() {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    setTyping(false);
+  }
+  function closeMenu() { setMenuOpen(false); menuButton.current?.focus(); }
   function savePng() {
     if (!result || !canExport) return;
     const link = document.createElement("a");
     link.href = result.exportUrl; link.download = "emote-club.png"; link.click();
   }
-  return <main onPointerDownCapture={() => begin("pointer")} onFocusCapture={event => { if (event.target instanceof HTMLTextAreaElement || (event.target instanceof HTMLInputElement && ["text", "number", "range"].includes(event.target.type))) begin(event.target instanceof HTMLInputElement && event.target.type === "range" ? "pointer" : "text"); }} onBlurCapture={end} ref={root} className={styles.workshop} data-mobile-panel={mobileTab} data-edit-section={editSection} data-expanded={expanded}>
+  return <main onPointerDownCapture={() => begin("pointer")} onFocusCapture={event => { if (event.target instanceof HTMLTextAreaElement && matchMedia("(max-width: 900px)").matches) setTyping(true); if (event.target instanceof HTMLTextAreaElement || (event.target instanceof HTMLInputElement && ["text", "number", "range"].includes(event.target.type))) begin(event.target instanceof HTMLInputElement && event.target.type === "range" ? "pointer" : "text"); }} onBlurCapture={end} ref={root} className={styles.workshop} data-mobile-panel={mobileTab} data-edit-section={activeEditSection} data-expanded={expanded} data-typing={typing} data-menu-open={menuOpen} onKeyDown={event => { if (event.key === "Escape") { if (menuOpen) closeMenu(); if (typing) finishTyping(); } }}>
     <div className={styles.heading}>
       <div className={styles.headingIdentity}><Link href="/" className={styles.backLink}>Emote Club</Link><h1>絵文字エディタ</h1></div>
-      <div className={styles.mobileHeaderActions}><button type="button" aria-label="文字を追加" disabled={loadingImage || draft.layers.length >= MAX_LAYERS} onClick={addText}><Type size={19} /></button><button type="button" className={styles.download} onClick={() => exportDialog.current?.showModal()}>書き出す</button></div>
-      <WorkshopAccount identity={identity} error={identityError} onRefresh={refreshIdentity} onError={setIdentityError} />
+      <div className={styles.mobileHeaderActions}><button ref={menuButton} type="button" aria-label="メニュー" aria-expanded={menuOpen} aria-controls="workshop-menu" onClick={() => setMenuOpen(value => !value)}><Menu size={20} /></button><button type="button" className={styles.download} onClick={() => exportDialog.current?.showModal()}>書き出す</button></div>
+      {menuOpen && <button type="button" className={styles.menuBackdrop} aria-label="メニューを閉じる" onClick={closeMenu} />}
+      <div id="workshop-menu" className={styles.accountMenu}>
+        <div className={styles.menuHeading}><h2>メニュー</h2><button type="button" aria-label="設定メニューを閉じる" onClick={closeMenu}><X size={20} /></button></div>
+        <WorkshopAccount identity={identity} error={identityError} onRefresh={refreshIdentity} onError={setIdentityError} />
+        <div className={styles.menuOptions}>
+          <h3>キャンバス</h3>
+          <button type="button" onClick={() => { autoLayout(); closeMenu(); }}><RotateCcw size={16} />自動配置</button>
+          <p>確認用の背景</p><div className={styles.menuBackgrounds}>{[["checker", "透明"], ["light", "明るい背景"], ["dark", "暗い背景"]].map(([value, label]) => <button key={value} type="button" aria-pressed={background === value} onClick={() => setBackground(value)}>{label}</button>)}</div>
+        </div>
+      </div>
       <RegisterEmoji key={`${identity?.user?.id || "guest"}:${identity?.guild?.id || ""}`} controlRef={registerControl} identity={identity} image={canExport ? result?.url : undefined} canExport={!!canExport} />
       <button className={styles.download} type="button" disabled={!canExport} onClick={savePng}><Download size={16} /> PNGを保存</button>
     </div>
@@ -292,7 +311,6 @@ export default function EmojiEditor() {
       </aside>
       <section className={styles.previewPanel} aria-label="絵文字のプレビュー">
         <div className={styles.previewTools}>
-          <div className={styles.mobileHistory}><button type="button" aria-label="元に戻す" disabled={!canUndo || loadingImage} onClick={undo}><Undo2 size={18} /></button><button type="button" aria-label="やり直す" disabled={!canRedo || loadingImage} onClick={redo}><Redo2 size={18} /></button></div>
           <button type="button" className={styles.quietButton} onClick={autoLayout} title="画像と文字の位置・大きさを自動で整える"><RotateCcw size={14} /> 自動配置</button>
           <button type="button" className={`${styles.quietButton} ${styles.globalEffectsButton}`} aria-label="全体の効果" aria-pressed={panel === "effects"} onClick={() => { setPanel("effects"); setMobileTab("effects"); }}><Sparkles size={14} />全体の効果{draft.effects.length > 0 && <span className={styles.effectBadge}>{draft.effects.length}</span>}</button>
           <div className={styles.backgrounds} aria-label="確認用の背景色">
@@ -317,7 +335,7 @@ export default function EmojiEditor() {
                 className={`${styles.selection} ${selected === id && panel === "layers" ? styles.selected : ""}`}
                 style={{ left: `${b.x / STAGE_SIZE * 100}%`, top: `${b.y / STAGE_SIZE * 100}%`, width: `${b.width / STAGE_SIZE * 100}%`, height: `${b.height / STAGE_SIZE * 100}%` }}
                 onPointerDown={(event) => beginDrag(event, id)} onPointerMove={moveDrag}
-                onPointerUp={event => { const current = drag.current; if (current && !current.resize && Math.hypot(event.clientX - current.x, event.clientY - current.y) < 5) setMobileTab("edit"); finishDrag(); }} onPointerCancel={finishDrag} onLostPointerCapture={finishDrag}
+                onPointerUp={event => { const current = drag.current; if (current && !current.resize && Math.hypot(event.clientX - current.x, event.clientY - current.y) < 5) { setExpanded(false); setMobileTab("edit"); } finishDrag(); }} onPointerCancel={finishDrag} onLostPointerCapture={finishDrag}
                 onFocus={() => selectLayer(id)} onKeyDown={(event) => {
                   const delta = event.shiftKey ? 10 : 2;
                   const offset: Record<string, [number, number]> = { ArrowLeft: [-delta, 0], ArrowRight: [delta, 0], ArrowUp: [0, -delta], ArrowDown: [0, delta] };
@@ -351,26 +369,28 @@ export default function EmojiEditor() {
             <span className={styles.smallEmoji} role="img" aria-label="32pxの絵文字" style={{ backgroundImage: result ? `url("${result.url}")` : undefined }} />
             <span className={styles.tinyEmoji} role="img" aria-label="16pxの絵文字" style={{ backgroundImage: result ? `url("${result.url}")` : undefined }} />
           </div>
+          <div className={styles.mobileHistory}><button type="button" aria-label="元に戻す" disabled={!canUndo || loadingImage} onClick={undo}><Undo2 size={18} /></button><button type="button" aria-label="やり直す" disabled={!canRedo || loadingImage} onClick={redo}><Redo2 size={18} /></button></div>
           <span className={styles.muted}>PNG保存 512 × 512 · Discord 128 × 128</span>
         </div>
         {error && <p className={styles.error} role="alert">{error}</p>}
       </section>
       <section className={styles.inspector} aria-label="絵文字の編集">
         <div className={styles.inspectorHeading}>
-          {expandButton}<button className={styles.mobileDone} type="button" onClick={() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); }}>完了</button>
+          <button className={styles.mobileDone} type="button" onClick={finishTyping}>完了</button>
           <h2>{panel === "effects" ? "全体の効果" : selectedLayer ? layerName(selectedLayer) : "レイヤーを選択"}</h2>
           {panel === "effects" && selectedLayer && <button type="button" className={styles.quietButton} aria-label="レイヤーの編集に戻る" title="レイヤーの編集に戻る" onClick={() => setPanel("layers")}><ArrowLeft size={15} /></button>}
         </div>
         <div className={styles.mobileCategories} aria-label="編集項目">
-          {mobileTab === "effects" ? <><button type="button" aria-pressed={panel === "layers"} disabled={!selectedLayer} onClick={() => setPanel("layers")}>このレイヤー</button><button type="button" aria-pressed={panel === "effects"} onClick={() => setPanel("effects")}>全体</button></> : <>{[["text", selectedLayer?.kind === "image" ? "画像" : "文字"], ["color", "色・縁・影"], ["spacing", "字間・行間"], ["transform", "大きさ・透明度"]].filter(([key]) => selectedLayer?.kind !== "image" || key === "text" || key === "transform").map(([key, label]) => <button key={key} type="button" aria-pressed={editSection === key} onClick={() => setEditSection(key)}>{label}</button>)}</>}
+          {mobileTab === "effects" ? <><button type="button" aria-pressed={panel === "layers"} disabled={!selectedLayer} onClick={() => setPanel("layers")}>このレイヤー</button><button type="button" aria-pressed={panel === "effects"} onClick={() => setPanel("effects")}>全体</button></> : <>{[["text", selectedLayer?.kind === "image" ? "画像" : "文字"], ["color", "色"], ["transform", "サイズ"], ["advanced", "詳細"]].filter(([key]) => selectedLayer?.kind !== "image" || key === "text" || key === "transform" || key === "advanced").map(([key, label]) => <button key={key} type="button" aria-pressed={activeEditSection === key} onClick={() => setEditSection(key)}>{label}</button>)}</>}
+          {mobileTab === "edit" && <button type="button" className={styles.addTextButton} aria-label="文字を追加" disabled={loadingImage || draft.layers.length >= MAX_LAYERS} onClick={addText}><Plus size={18} /></button>}
         </div>
         <div className={styles.settings} key={panel === "layers" ? selectedLayer?.id ?? "empty" : "all"}>
           {panel === "layers" && selectedLayer && <>
             <div className={styles.layerAppearance}><LayerAppearance layer={selectedLayer} loading={loadingImage} onTextChange={updateText} onLoadImage={(file, id) => { void loadImage(file, id); }} /></div>
-            {currentTransform && <div className={styles.transform}>
+            {currentTransform && <div className={styles.transform}><div className={styles.sizeGroup}>
               <Slider label="不透明度" value={Math.round((selectedLayer.opacity ?? 1) * 100)} min={0} max={100} unit="%" onChange={value => setDraft(previous => ({ ...previous, layers: previous.layers.map(layer => layer.id === selectedLayer.id ? { ...layer, opacity: value / 100 } : layer) }))} />
               <Slider label="大きさ" value={Math.round(currentTransform.scale * 100)} min={20} max={400} unit="%" onChange={value => transform(selectedLayer.id, { scale: value / 100 })} />
-              <details className={styles.details}>
+              </div><details className={styles.details}>
                 <summary>位置を数値で調整</summary>
                 <div className={styles.positionFields}>
                   <label>横<input type="number" min={0} max={128} value={Math.round(currentTransform.x / 4)} onChange={event => transform(selectedLayer.id, { x: clamp(Number(event.target.value) * 4, 0, STAGE_SIZE) })} /></label>
@@ -386,7 +406,7 @@ export default function EmojiEditor() {
     </div>
     <nav className={styles.mobileNav} aria-label="編集パネル">
       {mobileTabs.map(([key, label, Icon]) => <button key={key} type="button" aria-pressed={mobileTab === key} onClick={() => {
-        setMobileTab(key);
+        finishTyping(); setExpanded(false); setMobileTab(key);
         if (key === "edit") setPanel("layers");
         if (key === "effects" && !selectedLayer) setPanel("effects");
       }}><Icon size={20} />{label}</button>)}

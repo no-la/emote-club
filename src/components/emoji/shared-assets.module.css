@@ -86,3 +86,18 @@
 @media (max-width: 900px) { .mobileHeadingAction { display: contents; } .library > .empty { flex: 1; } }
 
 @media (max-width: 900px) { .mobileHeadingAction > button { border: 0; background: transparent; } }
+
+@media (max-width: 900px) {
+  .account { flex-wrap: wrap; gap: 8px; }
+  .account select { flex-basis: calc(100% - 64px); }
+  .account > span { max-width: none; font-size: 12px; }
+  .libraryTools .captureButton { display: none; }
+  .libraryTools { margin-top: auto; }
+  .card small { display: none; }
+  .card:has(.cardActions) { padding-bottom: 0; }
+  .cardActions > summary { top: 2px; bottom: auto; background: #202329cc; }
+  .library .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 4px 8px; }
+  .empty p { margin: 0; }
+}
+
+@media (max-width: 900px) { .library[data-connected="false"] .libraryTools { display: none; } }
