@@ -111,7 +111,7 @@ test("membership is checked for the requested guild and handles revoked/limited 
   mock.restoreAll(); mock.method(globalThis, "fetch", async () => new Response(null, { status: 401 }));
   await assert.rejects(discordGuild("token", "223456789012345678"), errorCode("session_expired"));
   mock.restoreAll(); mock.method(globalThis, "fetch", async () => new Response(null, { status: 429 }));
-  await assert.rejects(discordGuild("token", "223456789012345678"), errorCode("discord_unavailable"));
+  await assert.rejects(discordGuild("token", "223456789012345678"), errorCode("discord_rate_limited"));
 });
 
 test("OAuth exchange includes PKCE and rejects missing scopes", async () => {
