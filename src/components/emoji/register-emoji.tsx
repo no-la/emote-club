@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useImperativeHandle, type Ref } from "react";
-import { Send, X } from "lucide-react";
+import { X } from "lucide-react";
 import { emojiName, type RegistrationResult } from "@/lib/emoji/registration";
 import { guildUrl, type WorkshopIdentity } from "@/lib/emoji/shared";
 import { WorkshopRequestError, workshopRequest } from "./workshop-account";
@@ -9,7 +9,7 @@ import styles from "./register-emoji.module.css";
 
 type Submission = { requestId: string; name: string };
 export type RegisterEmojiHandle = { open: () => void };
-export default function RegisterEmoji({ identity, image, canExport, controlRef }: { controlRef?: Ref<RegisterEmojiHandle>; identity: WorkshopIdentity | null; image?: string; canExport: boolean }) {
+export default function RegisterEmoji({ identity, image, controlRef }: { controlRef?: Ref<RegisterEmojiHandle>; identity: WorkshopIdentity | null; image?: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const inFlight = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -94,7 +94,6 @@ export default function RegisterEmoji({ identity, image, canExport, controlRef }
     finally { inFlight.current = false; setBusy(false); }
   }
   return <>
-    <button type="button" className={styles.open} disabled={!canExport && !submission} onClick={open}><Send size={15} />サーバーに追加</button>
     <dialog ref={dialog} className={styles.dialog} aria-labelledby="register-title" onClose={() => {
       setOpened(false);
       if (outcome?.status === "succeeded") {

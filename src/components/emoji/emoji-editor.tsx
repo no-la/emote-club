@@ -28,6 +28,7 @@ export default function EmojiEditor() {
   const [panel, setPanel] = useState<"layers" | "effects">("layers");
   const [mobileTab, setMobileTab] = useState("materials");
   const [editSection, setEditSection] = useState("text");
+  const [desktopSection, setDesktopSection] = useState("color");
   const [typing, setTyping] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -116,6 +117,7 @@ export default function EmojiEditor() {
   const selected = draft.layers.some(layer => layer.id === selectedId) ? selectedId : draft.layers.at(-1)?.id ?? null;
   const selectedLayer = draft.layers.find(layer => layer.id === selected);
   const activeEditSection = selectedLayer?.kind === "image" && editSection === "color" ? "text" : editSection;
+  const activeDesktopSection = selectedLayer?.kind === "image" && desktopSection === "color" ? "transform" : desktopSection;
   function updateLayerEffects(id: string, stack: EffectStack) {
     setDraft(previous => ({ ...previous, layers: previous.layers.map(layer => layer.id === id ? { ...layer, ...stack } : layer) }));
   }
@@ -280,10 +282,9 @@ export default function EmojiEditor() {
     const link = document.createElement("a");
     link.href = result.exportUrl; link.download = "emote-club.png"; link.click();
   }
-  return <main onPointerDownCapture={() => begin("pointer")} onFocusCapture={event => { if (event.target instanceof HTMLTextAreaElement && matchMedia("(max-width: 900px)").matches) setTyping(true); if (event.target instanceof HTMLTextAreaElement || (event.target instanceof HTMLInputElement && ["text", "number", "range"].includes(event.target.type))) begin(event.target instanceof HTMLInputElement && event.target.type === "range" ? "pointer" : "text"); }} onBlurCapture={end} ref={root} className={styles.workshop} data-mobile-panel={mobileTab} data-edit-section={activeEditSection} data-expanded={expanded} data-typing={typing} data-menu-open={menuOpen} onKeyDown={event => { if (event.key === "Escape") { if (menuOpen) closeMenu(); if (typing) finishTyping(); } }}>
+  return <main onPointerDownCapture={() => begin("pointer")} onFocusCapture={event => { if (event.target instanceof HTMLTextAreaElement && matchMedia("(max-width: 900px)").matches) setTyping(true); if (event.target instanceof HTMLTextAreaElement || (event.target instanceof HTMLInputElement && ["text", "number", "range"].includes(event.target.type))) begin(event.target instanceof HTMLInputElement && event.target.type === "range" ? "pointer" : "text"); }} onBlurCapture={end} ref={root} className={styles.workshop} data-mobile-panel={mobileTab} data-edit-section={activeEditSection} data-desktop-section={activeDesktopSection} data-expanded={expanded} data-typing={typing} data-menu-open={menuOpen} onKeyDown={event => { if (event.key === "Escape") { if (menuOpen) closeMenu(); if (typing) finishTyping(); } }}>
     <div className={styles.heading}>
       <div className={styles.headingIdentity}><Link href="/" className={styles.backLink}>Emote Club</Link><h1>絵文字エディタ</h1></div>
-      <div className={styles.mobileHeaderActions}><button type="button" className={styles.download} onClick={() => exportDialog.current?.showModal()}>書き出す</button><button ref={menuButton} className={styles.menuTrigger} type="button" aria-label="メニュー" aria-expanded={menuOpen} aria-controls="workshop-menu" onClick={() => setMenuOpen(value => !value)}><Menu size={20} /></button></div>
       {menuOpen && <button type="button" className={styles.menuBackdrop} aria-label="メニューを閉じる" onClick={closeMenu} />}
       <div id="workshop-menu" className={styles.accountMenu}>
         <div className={styles.menuHeading}><h2>メニュー</h2><button type="button" aria-label="設定メニューを閉じる" onClick={closeMenu}><X size={20} /></button></div>
@@ -294,8 +295,8 @@ export default function EmojiEditor() {
           <p>確認用の背景</p><div className={styles.menuBackgrounds}>{[["checker", "透明"], ["light", "明るい背景"], ["dark", "暗い背景"]].map(([value, label]) => <button key={value} type="button" aria-pressed={background === value} onClick={() => setBackground(value)}>{label}</button>)}</div>
         </div>
       </div>
-      <RegisterEmoji key={`${identity?.user?.id || "guest"}:${identity?.guild?.id || ""}`} controlRef={registerControl} identity={identity} image={canExport ? result?.url : undefined} canExport={!!canExport} />
-      <button className={styles.download} type="button" disabled={!canExport} onClick={savePng}><Download size={16} /> PNGを保存</button>
+      <RegisterEmoji key={`${identity?.user?.id || "guest"}:${identity?.guild?.id || ""}`} controlRef={registerControl} identity={identity} image={canExport ? result?.url : undefined} />
+      <div className={styles.headerActions}><button type="button" className={styles.download} onClick={() => exportDialog.current?.showModal()}>書き出す</button><button ref={menuButton} className={styles.menuTrigger} type="button" aria-label="メニュー" aria-expanded={menuOpen} aria-controls="workshop-menu" onClick={() => setMenuOpen(value => !value)}><Menu size={20} /></button></div>
     </div>
     <div className={styles.workspace}>
       <aside className={styles.assetSidebar} aria-label="共有素材とレイヤー">
@@ -385,7 +386,9 @@ export default function EmojiEditor() {
         </>}>
         <PanelBody className={styles.settings} key={panel === "layers" ? selectedLayer?.id ?? "empty" : "all"}>
           {panel === "layers" && selectedLayer && <>
-            <div className={styles.layerAppearance}><LayerAppearance layer={selectedLayer} loading={loadingImage} onTextChange={updateText} onLoadImage={(file, id) => { void loadImage(file, id); }} /></div>
+            <div className={styles.layerAppearance}><LayerAppearance layer={selectedLayer} loading={loadingImage} onTextChange={updateText} onLoadImage={(file, id) => { void loadImage(file, id); }} settingsNavigation={<div className={styles.desktopCategories} aria-label="レイヤーの設定項目">
+              {([["color", "色"], ["transform", "サイズ"], ["advanced", "詳細"]] as const).filter(([key]) => selectedLayer.kind !== "image" || key !== "color").map(([key, label]) => <button key={key} type="button" aria-pressed={activeDesktopSection === key} onClick={() => setDesktopSection(key)}>{label}</button>)}
+            </div>} /></div>
             {currentTransform && <div className={styles.transform}><div className={styles.sizeGroup}>
               <Slider label="不透明度" value={Math.round((selectedLayer.opacity ?? 1) * 100)} min={0} max={100} unit="%" onChange={value => setDraft(previous => ({ ...previous, layers: previous.layers.map(layer => layer.id === selectedLayer.id ? { ...layer, opacity: value / 100 } : layer) }))} />
               <Slider label="大きさ" value={Math.round(currentTransform.scale * 100)} min={20} max={400} unit="%" onChange={value => transform(selectedLayer.id, { scale: value / 100 })} />

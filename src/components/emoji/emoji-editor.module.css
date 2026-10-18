@@ -128,7 +128,7 @@
 .layerGrip { color: #818995; }
 
 /* Mobile reuses the same editor and renderer; desktop remains a three-column workspace. */
-.mobileHeaderActions, .mobileNav, .mobileCategories, .layerList .touchGrip { display: none; }
+.mobileNav, .mobileCategories, .layerList .touchGrip { display: none; }
 .layerAppearance, .textGroup, .spacingGroup, .colorGroup, .layerEffects { display: contents; }
 .exportDialog { width: min(440px, calc(100vw - 24px)); padding: 16px; border: 1px solid #515662; border-radius: 18px; background: #292b30; color: #e4e7ec; }
 .exportDialog::backdrop { background: #0009; }
@@ -144,10 +144,8 @@
   .headingIdentity { margin: 0; }
   .headingIdentity h1 { display: none; }
   .backLink { font-size: 17px; font-weight: 700; color: #edf0f4; }
-  .heading > .download { display: none; }
-  .mobileHeaderActions { display: flex; gap: 8px; align-items: center; }
-  .mobileHeaderActions > button { min-width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
-  .mobileHeaderActions > .menuTrigger { background: transparent; color: #c4ceda; border: 0; border-radius: 6px; }
+  .headerActions > button { min-width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+  .headerActions > .menuTrigger { background: transparent; color: #c4ceda; border: 0; border-radius: 6px; }
   .workspace { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(110px, 1fr) minmax(0, 42%); border: 0; border-radius: 0; background: #222429; }
   .workshop[data-expanded="true"] .workspace { grid-template-rows: minmax(80px, 1fr) minmax(0, 65%); }
   .assetSidebar { display: contents; }
@@ -304,4 +302,22 @@
   .workshop[data-mobile-panel=""] .workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
   .workshop[data-mobile-panel=""] .inspector { display: none; }
   .workshop[data-mobile-panel=""] .stage { width: min(calc(100cqw - 24px), calc(100cqh - 24px), 768px); }
+}
+
+.headerActions { display: flex; gap: 8px; align-items: center; }
+.menuTrigger, .desktopCategories { display: none; }
+@media (min-width: 901px) {
+  .settings { display: flex; flex-direction: column; }
+  .desktopCategories { display: flex; gap: 4px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid #41444c; flex-shrink: 0; }
+  .desktopCategories button { flex: 1; min-height: 36px; border: 0; border-radius: 6px; padding: 8px; background: transparent; color: #a8b3c1; cursor: pointer; }
+  .desktopCategories button[aria-pressed="true"] { color: #92e5ed; background: #5ccad31a; }
+  .desktopCategories button:focus-visible { outline: 2px solid #5ccad3; outline-offset: -2px; }
+  .colorGroup, .spacingGroup, .shadowGroup, .transform { display: block; }
+  .layerEffects { display: block; }
+  .workshop:not([data-desktop-section="color"]) .colorGroup,
+  .workshop:not([data-desktop-section="advanced"]) .spacingGroup,
+  .workshop:not([data-desktop-section="advanced"]) .shadowGroup,
+  .workshop[data-desktop-section="color"] .transform,
+  .workshop[data-desktop-section="transform"] .transform > .details,
+  .workshop[data-desktop-section="advanced"] .sizeGroup { display: none; }
 }

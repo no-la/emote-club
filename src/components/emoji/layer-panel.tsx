@@ -108,23 +108,25 @@ export default function LayerPanel({ layers, selected, loading, imageError, onSe
   </>;
 }
 
-export function LayerAppearance({ layer, loading, onTextChange, onLoadImage }: {
+export function LayerAppearance({ layer, loading, onTextChange, onLoadImage, settingsNavigation }: {
+  settingsNavigation?: ReactNode;
   layer: EmojiLayer; loading: boolean; onTextChange: (change: Partial<TextAppearance & { text: string }>) => void;
   onLoadImage: (file?: File, replaceId?: string) => void;
 }) {
-  if (layer.kind === "text") return <TextSettings layer={layer} onChange={onTextChange} />;
-  return <label className={styles.upload}>
+  if (layer.kind === "text") return <TextSettings layer={layer} onChange={onTextChange} settingsNavigation={settingsNavigation} />;
+  return <><label className={styles.upload}>
     <ImagePlus size={24} /><span>{loading ? "読み込み中…" : "画像を変更"}</span><small>PNG・JPEG・WebP / 20 MiBまで・大きな画像は自動縮小</small>
     <input type="file" accept="image/png,image/jpeg,image/webp" aria-label="選択レイヤーの画像を変更" disabled={loading} onChange={event => { onLoadImage(event.target.files?.[0], layer.id); event.target.value = ""; }} />
-  </label>;
+  </label>{settingsNavigation}</>;
 }
 
-function TextSettings({ layer, onChange }: { layer: TextLayer; onChange: (change: Partial<TextAppearance & { text: string }>) => void }) {
+function TextSettings({ layer, onChange, settingsNavigation }: { settingsNavigation?: ReactNode; layer: TextLayer; onChange: (change: Partial<TextAppearance & { text: string }>) => void }) {
   return <>
     <div className={styles.textGroup}><label className={styles.field}><span>文字 <small>{layer.text.length}/40</small></span>
       <textarea rows={2} maxLength={40} value={layer.text} placeholder="文字を入力" onChange={event => onChange({ text: event.target.value })} />
     </label>
     <div className={styles.fontGroup}><FontPicker value={layer.font} text={layer.text} onChange={font => onChange({ font })} /></div></div>
+    {settingsNavigation}
     <div className={styles.spacingGroup}>
     <div className={styles.appearance}>
       <Slider label="字間" value={layer.letterSpacing ?? 0} min={-30} max={100} unit="%" onChange={letterSpacing => onChange({ letterSpacing })} />
