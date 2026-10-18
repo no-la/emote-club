@@ -20,9 +20,9 @@ type Props = ComponentPropsWithoutRef<"section"> & {
   toolbarClassName?: string;
 };
 
-function PanelControls({ controls, expandable }: { controls: MobilePanelControls; expandable: boolean }) {
+function PanelControls({ controls }: { controls: MobilePanelControls }) {
   return <span className={styles.controls} data-panel-controls>
-    {expandable && <button type="button" className={styles.expand} aria-label={controls.expanded ? "パネルを縮小" : "パネルを拡大"} aria-expanded={controls.expanded} onClick={controls.onToggleExpanded}><ChevronUp size={18} style={{ transform: controls.expanded ? "rotate(180deg)" : undefined }} /></button>}
+    <button type="button" className={styles.expand} aria-label={controls.expanded ? "パネルを縮小" : "パネルを拡大"} aria-expanded={controls.expanded} onClick={controls.onToggleExpanded}><ChevronUp size={18} style={{ transform: controls.expanded ? "rotate(180deg)" : undefined }} /></button>
     <button type="button" className={styles.close} aria-label="編集パネルを閉じる" onClick={controls.onClose}><X size={20} /></button>
   </span>;
 }
@@ -32,11 +32,11 @@ export default function MobilePanel({ controls, heading, headingClassName = "", 
   return <section {...props} className={`${styles.panel} ${className}`}>
     <div className={`${styles.heading} ${headingClassName}`}>
       {heading}
-      {!mobileToolbar && <PanelControls controls={controls} expandable />}
       {headingActions}
+      {!mobileToolbar && <PanelControls controls={controls} />}
     </div>
     {mobileToolbar && <div className={`${styles.toolbar} ${toolbarClassName}`} aria-label="編集項目">
-      {mobileToolbar}<PanelControls controls={controls} expandable={false} />
+      <div className={styles.toolbarContent}>{mobileToolbar}</div><PanelControls controls={controls} />
     </div>}
     {children}
   </section>;

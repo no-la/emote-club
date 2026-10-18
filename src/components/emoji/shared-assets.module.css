@@ -63,10 +63,6 @@
   .account > span { max-width: 80px; font-size: 10px; }
   .account select { flex: 1; min-width: 0; max-width: none; font-size: 16px; min-height: 40px; }
   .account a, .account button { min-height: 44px; }
-  .library { padding: 0 12px 10px; gap: 6px; }
-  .libraryHeading { min-height: 44px; }
-  .libraryHeading h2 { margin-right: auto; }
-  .library .libraryHeading > button { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
   .subtitle { display: none; }
   .libraryTools { order: 2; }
   .libraryTools > * { flex: 1; min-height: 44px; }
@@ -84,7 +80,6 @@
 
 @media (max-width: 900px) { .library > .empty { flex: 1; } }
 
-@media (max-width: 900px) { .library [data-panel-controls] > button { border: 0; background: transparent; } }
 
 @media (max-width: 900px) {
   .account { flex-wrap: wrap; gap: 8px; }
