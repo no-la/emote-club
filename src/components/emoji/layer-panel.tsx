@@ -4,6 +4,7 @@ import { ArrowUp, ArrowDown, Copy, Trash2, Type, ImagePlus, Sparkles, GripVertic
 import { useState, useRef, useEffect, type PointerEvent, type ReactNode } from "react";
 import { layerName, type EmojiLayer, type TextLayer, type TextAppearance } from "@/lib/emoji/model";
 import { ColorPalette, Slider } from "./editor-controls";
+import { PanelBody } from "./mobile-panel";
 import FontPicker from "./font-picker";
 import styles from "./emoji-editor.module.css";
 
@@ -63,7 +64,7 @@ export default function LayerPanel({ layers, selected, loading, imageError, onSe
     </div>
     {children}
     {atLimit && <p className={styles.layerHint}>追加できるレイヤーは16個までです</p>}
-    <ul ref={list} className={styles.layerList} aria-label="レイヤー（上が手前）">
+    <PanelBody as="ul" ref={list} className={styles.layerList} aria-label="レイヤー（上が手前）">
       {[...layers].reverse().map((layer, index) => <li key={layer.id} data-layer-row={layer.id}
         data-dragging={dragged === layer.id || undefined}
         data-drop={drop?.id === layer.id ? (drop.before ? "before" : "after") : undefined}
@@ -95,7 +96,7 @@ export default function LayerPanel({ layers, selected, loading, imageError, onSe
           <GripVertical size={13} className={styles.layerGrip} aria-hidden="true" />{layer.kind === "text" ? <Type size={14} /> : <ImagePlus size={14} />}<span>{layerName(layer)}</span>{layer.effects.length > 0 && <Sparkles size={12} aria-label="効果あり" />}
         </button>
       </li>)}
-    </ul>
+    </PanelBody>
     {selected && <div className={styles.layerActions} aria-label="選択レイヤーの操作">
       <button type="button" aria-label="レイヤーを手前へ" title="手前へ" disabled={index === layers.length - 1} onClick={() => onMove(selected.id, 1)}><ArrowUp size={15} /></button>
       <button type="button" aria-label="レイヤーを奥へ" title="奥へ" disabled={index === 0} onClick={() => onMove(selected.id, -1)}><ArrowDown size={15} /></button>

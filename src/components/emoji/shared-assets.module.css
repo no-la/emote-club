@@ -4,7 +4,7 @@
 .account .unavailable { color: #939ca9; }
 .account .accountError { color: #ffb3b3; }
 .library { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px 12px 12px; overflow: hidden; }
-.libraryHeading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; }
+.libraryHeading { gap: 8px; flex-shrink: 0; }
 .libraryHeading h2 { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 13px; font-weight: 600; color: #d6e8ed; }
 .library button, .empty a { border: 1px solid #515c6a; border-radius: 5px; padding: 6px 8px; background: #30363f; color: #d5e5ed; font: inherit; font-size: 11px; cursor: pointer; text-decoration: none; }
 .library button:disabled { opacity: .4; cursor: default; }
@@ -16,7 +16,7 @@
 .uploadButton input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
 .uploadButton[aria-disabled="true"] { opacity: .4; cursor: default; }
 .uploadButton input:disabled { cursor: default; }
-.content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.content { flex: 1; scrollbar-gutter: stable; }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 9px; padding: 0 2px 4px 0; margin: 0; list-style: none; }
 .card { min-width: 0; position: relative; display: flex; flex-direction: column; gap: 5px; border: 1px solid #444d59; border-radius: 7px; padding: 6px; }
 .card .assetPreview { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 1; padding: 0; border: 0; border-radius: 4px; background-color: #343840; background-image: conic-gradient(#40454e 25%, transparent 0 50%, #40454e 0 75%, transparent 0); background-size: 16px 16px; overflow: hidden; }
@@ -82,10 +82,9 @@
   .dialog button { min-height: 44px; min-width: 44px; }
 }
 
-.mobileHeadingAction { display: none; }
-@media (max-width: 900px) { .mobileHeadingAction { display: contents; } .library > .empty { flex: 1; } }
+@media (max-width: 900px) { .library > .empty { flex: 1; } }
 
-@media (max-width: 900px) { .mobileHeadingAction > button { border: 0; background: transparent; } }
+@media (max-width: 900px) { .library [data-panel-controls] > button { border: 0; background: transparent; } }
 
 @media (max-width: 900px) {
   .account { flex-wrap: wrap; gap: 8px; }

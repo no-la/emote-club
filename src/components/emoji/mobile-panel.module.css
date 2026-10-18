@@ -1,0 +1,14 @@
+.heading { display: flex; justify-content: space-between; align-items: center; }
+.body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.controls, .toolbar { display: none; }
+@media (max-width: 900px) {
+  .panel.panel { min-height: 0; border: 1px solid #44474e; border-bottom: 0; border-radius: 18px 18px 0 0; background: #292b30; }
+  .controls { display: contents; }
+  .controls .expand, .controls .close { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border: 0; cursor: pointer; }
+  .controls .expand { padding: 0; background: transparent; color: #b6c6d3; }
+  .controls .close { padding: 0 8px; border-radius: 8px; background: #3a3e46; color: #e4e7ec; }
+  .toolbar .controls .close { margin-left: auto; position: sticky; right: 0; }
+}
+@media (min-width: 600px) and (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+  .panel.panel { border-radius: 12px 0 0 0; }
+}

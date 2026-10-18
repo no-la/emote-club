@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useImperativeHandle, type Ref, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, useImperativeHandle, type Ref } from "react";
+import MobilePanel, { PanelBody, type MobilePanelControls } from "./mobile-panel";
 import Image from "next/image";
 import { Images, Plus, RefreshCw, X, Camera, ImagePlus, MoreHorizontal } from "lucide-react";
 import { assetName, guildUrl, type SharedAsset, type WorkshopIdentity } from "@/lib/emoji/shared";
@@ -33,8 +34,8 @@ function AssetCard({ asset, busy, canAdd, onUse, onRename, onDelete }: { asset: 
 }
 
 export type SharedAssetsHandle = { shareCanvas: () => void };
-export default function SharedAssets({ identity, identityError, canAdd, onUse, onRefreshIdentity, canvasImage, canvasName, controlRef, headingAction }: {
-  controlRef?: Ref<SharedAssetsHandle>; headingAction?: ReactNode;
+export default function SharedAssets({ identity, identityError, canAdd, onUse, onRefreshIdentity, canvasImage, canvasName, controlRef, panelControls }: {
+  controlRef?: Ref<SharedAssetsHandle>; panelControls: MobilePanelControls;
   identity: WorkshopIdentity | null; identityError: string; canAdd: boolean;
   onUse: (file: File) => Promise<void>; onRefreshIdentity: () => Promise<void>;
   canvasImage?: string; canvasName: string;
@@ -109,10 +110,10 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
     });
   }
   useImperativeHandle(controlRef, () => ({ shareCanvas }));
-  return <section className={styles.library} data-connected={connected} aria-labelledby="shared-assets-title">
-    <header className={styles.libraryHeading}><h2 id="shared-assets-title"><Images size={16} />共有素材</h2><span className={styles.mobileHeadingAction}>{headingAction}</span>
+  return <MobilePanel className={styles.library} data-connected={connected} aria-labelledby="shared-assets-title" controls={panelControls}
+    headingClassName={styles.libraryHeading} heading={<h2 id="shared-assets-title"><Images size={16} />共有素材</h2>} headingActions={
       <button type="button" aria-label="共有素材を更新" title="一覧を更新" disabled={!connected || busy || loading} onClick={() => void load()}><RefreshCw size={14} /></button>
-    </header>
+    }>
     <p className={styles.subtitle}>選ぶとレイヤーに追加</p>
     <div className={styles.libraryTools}>
       <button type="button" className={styles.captureButton} disabled={!connected || !canvasImage || busy || loading} title="キャンバスの見た目を透明PNGとして共有" onClick={shareCanvas}><Camera size={14} />今の画像を共有</button>
@@ -121,13 +122,13 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
         if (selected) void run(() => choose(selected, selected.name.replace(/\.[^.]+$/, "")));
       }} /></label>
     </div>
-    {!connected ? <div className={styles.empty}>
+    {!connected ? <PanelBody className={styles.empty}>
       {identityError ? <><p role="alert">{identityError}</p><button type="button" onClick={() => void onRefreshIdentity()}>再確認</button></> : !identity ? <p>ログイン状態を確認中…</p> : !identity.configured ? <p>共有素材は準備中です。</p> : !identity.user ? <><p>サーバーのみんなの素材を<br />ここから使えます。</p><a href="/api/auth/discord" target="_blank" rel="noopener">Discordでログイン</a></> : !identity.guild ? <p>上のメニューからサーバーを選んでください。</p> : <p>共有素材の保存先を準備中です。</p>}
-    </div> : <>
+    </PanelBody> : <>
       {error && <p className={styles.error} role="alert">{error}</p>}
       {notice && <p className={styles.notice} role="status">{notice}</p>}
       {!canAdd && <p className={styles.notice}>読み込み完了、またはレイヤー削除後に追加できます。</p>}
-      <div className={styles.content} aria-busy={loading || busy}>
+      <PanelBody className={styles.content} aria-busy={loading || busy}>
         {!assets.length && <p className={styles.empty}>{loading ? "素材を読み込み中…" : error ? "一覧を更新して再試行してください。" : "まだ素材がありません。今の画像や手元の画像を共有してみましょう。"}</p>}
         <ul className={styles.grid}>{assets.map(asset => <AssetCard key={asset.id} asset={asset} busy={busy || loading} canAdd={canAdd} onUse={() => { void run(async () => {
           const response = await fetch(asset.imageUrl!, { cache: "no-store", credentials: "omit" });
@@ -142,7 +143,7 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
           if (active.current) { setAssets(previous => previous.filter(item => item.id !== asset.id)); await load(); }
         }); }} />)}</ul>
         {nextOffset !== null && <button type="button" className={styles.more} disabled={busy || loading} onClick={() => void load(nextOffset)}>{loading ? "読み込み中…" : "もっと見る"}</button>}
-      </div>
+      </PanelBody>
     </>}
     <dialog ref={dialog} className={styles.dialog} aria-labelledby="share-image-title" onCancel={event => { if (busy) event.preventDefault(); }} onClose={() => { setFile(null); setUploadError(""); }}>
       <header><h2 id="share-image-title">画像を共有素材に登録</h2><button type="button" aria-label="素材の登録を閉じる" disabled={busy} onClick={closeUpload}><X size={20} /></button></header>
@@ -160,5 +161,5 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
         <div className={styles.uploadActions}><button type="button" disabled={busy} onClick={closeUpload}>取消</button><button disabled={busy || !file || !assetName(name)}>{busy ? "共有中…" : "サーバーに共有"}</button></div>
       </form>
     </dialog>
-  </section>;
+  </MobilePanel>;
 }

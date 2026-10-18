@@ -10,7 +10,7 @@
 .workspace { display: grid; grid-template-columns: 260px minmax(0, 1fr) 310px; flex: 1; min-height: 0; border: 1px solid #44474e; border-radius: 10px; overflow: hidden; background: #292b30; }
 .assetSidebar { width: auto; max-width: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; border-right: 1px solid #44474e; }
 .layerSidebar { flex: 0 0 36%; min-height: 190px; min-width: 0; display: flex; flex-direction: column; border-top: 1px solid #44474e; padding: 12px 10px 10px; box-sizing: border-box; }
-.sidebarHeading { display: flex; justify-content: space-between; align-items: center; margin: 0 4px 14px; gap: 10px; }
+.sidebarHeading { margin: 0 4px 14px; gap: 10px; }
 .sidebarHeading h2, .inspectorHeading h2, .effectTools h2 { margin: 0; font-size: 12px; font-weight: 600; }
 .sidebarHeading small { font-size: 10px; color: #939ca9; }
 .layerAdd { display: flex; gap: 6px; margin-bottom: 12px; flex-shrink: 0; }
@@ -18,7 +18,7 @@
 .addImage { position: relative; }
 .addImage input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
 .layerAdd button:disabled, .addImage[aria-disabled="true"] { opacity: 0.45; cursor: default; }
-.layerList { flex: 1; min-height: 0; list-style: none; padding: 0; margin: 0; overflow-y: auto; overscroll-behavior: contain; }
+.layerList { flex: 1; list-style: none; padding: 0; margin: 0; }
 .layerList button { width: 100%; display: flex; align-items: center; gap: 8px; min-width: 0; padding: 10px 9px; border: 0; border-radius: 5px; background: transparent; color: #bcc2cc; text-align: left; cursor: pointer; font: inherit; font-size: 12px; }
 .layerList button svg { flex-shrink: 0; }
 .layerList button span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -60,9 +60,9 @@
 .tinyEmoji { width: 16px; height: 16px; }
 .muted { color: #939ca9; font-size: 10px; }
 .inspector { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-left: 1px solid #44474e; }
-.inspectorHeading { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding: 12px 16px; border-bottom: 1px solid #41444c; flex-shrink: 0; }
+.inspectorHeading { gap: 12px; min-height: 44px; padding: 12px 16px; border-bottom: 1px solid #41444c; flex-shrink: 0; }
 .inspectorHeading h2 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.settings { padding: 16px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+.settings { padding: 16px; }
 .field { display: flex; flex-direction: column; gap: 7px; font-size: 12px; margin-bottom: 14px; }
 .field > span { display: flex; justify-content: space-between; align-items: center; }
 .field small { color: #939ca9; font-size: 10px; }
@@ -128,7 +128,7 @@
 .layerGrip { color: #818995; }
 
 /* Mobile reuses the same editor and renderer; desktop remains a three-column workspace. */
-.mobileHeaderActions, .mobileNav, .mobileExpand, .mobileCategories, .layerList .touchGrip { display: none; }
+.mobileHeaderActions, .mobileNav, .mobileCategories, .layerList .touchGrip { display: none; }
 .layerAppearance, .textGroup, .spacingGroup, .colorGroup, .layerEffects { display: contents; }
 .exportDialog { width: min(440px, calc(100vw - 24px)); padding: 16px; border: 1px solid #515662; border-radius: 18px; background: #292b30; color: #e4e7ec; }
 .exportDialog::backdrop { background: #0009; }
@@ -151,7 +151,7 @@
   .workspace { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(110px, 1fr) minmax(0, 42%); border: 0; border-radius: 0; background: #222429; }
   .workshop[data-expanded="true"] .workspace { grid-template-rows: minmax(80px, 1fr) minmax(0, 65%); }
   .assetSidebar { display: contents; }
-  .assetSidebar > section, .inspector { grid-column: 1; grid-row: 2; border: 1px solid #44474e; border-bottom: 0; border-radius: 18px 18px 0 0; background: #292b30; min-height: 0; }
+  .assetSidebar > section, .inspector { grid-column: 1; grid-row: 2; }
   .workshop:not([data-mobile-panel="materials"]) .assetSidebar > section:first-child,
   .workshop:not([data-mobile-panel="layers"]) .layerSidebar,
   .workshop[data-mobile-panel="materials"] .inspector,
@@ -170,7 +170,6 @@
   .mobileNav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 1px solid #44474e; background: #292b30; }
   .mobileNav button { min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 0; background: transparent; color: #9fa9b7; font-size: 11px; cursor: pointer; }
   .mobileNav button[aria-pressed="true"] { color: #83e2e9; background: #5ccad310; box-shadow: inset 0 2px #5ccad3; }
-  .mobileExpand { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border: 0; background: transparent; color: #b6c6d3; cursor: pointer; }
   .sidebarHeading { margin: 0; min-height: 44px; }
   .sidebarHeading h2 { margin-right: auto; }
   .layerSidebar { padding: 0 12px 8px; }
@@ -231,7 +230,7 @@
 @media (min-width: 600px) and (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
   .workspace, .workshop[data-expanded="true"] .workspace { grid-template-columns: minmax(0, 1fr) minmax(320px, 48%); grid-template-rows: minmax(0, 1fr); }
   .workshop[data-expanded="true"] .workspace { grid-template-columns: minmax(0, 1fr) minmax(320px, 65%); }
-  .assetSidebar > section, .inspector { grid-column: 2; grid-row: 1; border-radius: 12px 0 0 0; }
+  .assetSidebar > section, .inspector { grid-column: 2; grid-row: 1; }
 }
 
 /* Focused phone layout: keep secondary controls out of the working area. */
@@ -315,11 +314,4 @@
   .workshop[data-mobile-panel=""] .workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
   .workshop[data-mobile-panel=""] .inspector { display: none; }
   .workshop[data-mobile-panel=""] .stage { width: min(calc(100cqw - 24px), calc(100cqh - 24px), 768px); }
-}
-
-/* Make collapsing a mobile panel discoverable without adding another toolbar. */
-.mobileClose { display: none; }
-@media (max-width: 900px) {
-  .mobileClose, .mobileCategories .mobileClose { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 8px; border: 0; border-radius: 8px; background: #3a3e46; color: #e4e7ec; font-size: 12px; white-space: nowrap; cursor: pointer; }
-  .mobileCategories .mobileClose { margin-left: auto; position: sticky; right: 0; }
 }
