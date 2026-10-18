@@ -1,6 +1,5 @@
 export const STAGE_SIZE = 512;
 export const OUTPUT_SIZE = 128;
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 export type ElementId = string;
 export type Transform = { x: number; y: number; scale: number };
 export const EFFECTS = {

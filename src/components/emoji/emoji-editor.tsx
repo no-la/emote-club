@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useRef, useState, type PointerEvent } from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, RotateCcw, Sparkles, Images, Layers, SlidersHorizontal, ChevronUp, X, Undo2, Redo2, Menu, Plus } from "lucide-react";
-import { clamp, initialEffects, createTextLayer, layerName, MAX_IMAGE_BYTES, STAGE_SIZE, type EffectStack, type ElementId, type EmojiDraft, type Transform, type TextAppearance } from "@/lib/emoji/model";
+import { clamp, initialEffects, createTextLayer, layerName, STAGE_SIZE, type EffectStack, type ElementId, type EmojiDraft, type Transform, type TextAppearance } from "@/lib/emoji/model";
 import type { createEmojiRenderer, RenderResult, ElementBounds } from "@/lib/emoji/renderer";
 import { loadFont } from "@/lib/emoji/fonts";
 import LayerPanel, { MAX_LAYERS, LayerAppearance } from "./layer-panel";
@@ -12,6 +12,7 @@ import EffectEditor from "./effect-editor";
 import SharedAssets, { type SharedAssetsHandle } from "./shared-assets";
 import RegisterEmoji, { type RegisterEmojiHandle } from "./register-emoji";
 import { useWorkshopIdentity, WorkshopAccount } from "./workshop-account";
+import { prepareImage } from "@/lib/emoji/prepare-image";
 import { createLayerId } from "@/lib/emoji/client-id";
 import { snapAxis } from "@/lib/emoji/snapping";
 import { useDraftHistory } from "./use-draft-history";
@@ -187,29 +188,23 @@ export default function EmojiEditor() {
     const version = ++uploadVersion.current;
     uploadTarget.current = replaceId;
     setImageError("");
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      setLoadingImage(false);
-      setImageError("PNG・JPEG・WebPの画像を選んでください。"); return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setLoadingImage(false);
-      setImageError("画像は5 MB以下にしてください。"); return;
-    }
     setLoadingImage(true);
-    const url = URL.createObjectURL(file);
+    let url: string | undefined;
     try {
+      const prepared = await prepareImage(file);
+      if (!mounted.current || version !== uploadVersion.current) return;
+      url = URL.createObjectURL(prepared);
       const element = new Image();
       element.src = url;
       await element.decode();
-      if (element.naturalWidth * element.naturalHeight > 16_000_000) throw new Error("large");
       if (!mounted.current || version !== uploadVersion.current) return;
       const id = replaceId ?? createLayerId();
       setDraft(previous => ({ ...previous, layers: replaceId ? previous.layers.map(layer => layer.id === id && layer.kind === "image" ? { ...layer, source: element, name: file.name } : layer) : previous.layers.length < MAX_LAYERS ? [...previous.layers, { ...initialEffects(), id, kind: "image", opacity: 1, source: element, name: file.name, transform: { x: 256, y: 256, scale: 1 } }] : previous.layers }));
       if (!replaceId || draft.layers.some(layer => layer.id === replaceId)) { selectLayer(id); }
-    } catch {
-      if (mounted.current && version === uploadVersion.current) setImageError("画像を読み込めませんでした。縦×横が1600万画素以下の別の画像をお試しください。");
+    } catch (cause) {
+      if (mounted.current && version === uploadVersion.current) setImageError(cause instanceof Error ? cause.message : "画像を読み込めませんでした。");
     } finally {
-      URL.revokeObjectURL(url);
+      if (url) URL.revokeObjectURL(url);
       if (mounted.current && version === uploadVersion.current) { setLoadingImage(false); uploadTarget.current = undefined; }
     }
   }

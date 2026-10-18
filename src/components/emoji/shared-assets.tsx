@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState, useImperativeHandle, type Ref, type ReactNode } from "react";
 import Image from "next/image";
 import { Images, Plus, RefreshCw, X, Camera, ImagePlus, MoreHorizontal } from "lucide-react";
-import { assetName, guildUrl, SHARED_IMAGE_BYTES, type SharedAsset, type WorkshopIdentity } from "@/lib/emoji/shared";
+import { assetName, guildUrl, type SharedAsset, type WorkshopIdentity } from "@/lib/emoji/shared";
+import { prepareImage } from "@/lib/emoji/prepare-image";
 import { workshopRequest } from "./workshop-account";
 import styles from "./shared-assets.module.css";
 
@@ -80,9 +81,10 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
     const url = URL.createObjectURL(file); setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
-  function choose(selected: File, suggestedName: string) {
-    if (selected.size > SHARED_IMAGE_BYTES) { setError("共有画像は4 MiB以下にしてください。"); return; }
-    setUploadError(""); setFile(selected); setName(suggestedName.slice(0, 80));
+  async function choose(selected: File, suggestedName: string) {
+    const prepared = await prepareImage(selected);
+    if (!active.current) return;
+    setUploadError(""); setFile(prepared); setName(suggestedName.slice(0, 80));
     dialog.current?.showModal();
   }
   function closeUpload() {
@@ -103,7 +105,7 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
     const capturedName = canvasName;
     void run(async () => {
       const blob = await (await fetch(captured)).blob();
-      if (active.current) choose(new File([blob], "canvas.png", { type: "image/png" }), capturedName || "作った絵文字");
+      if (active.current) await choose(new File([blob], "canvas.png", { type: "image/png" }), capturedName || "作った絵文字");
     });
   }
   useImperativeHandle(controlRef, () => ({ shareCanvas }));
@@ -114,9 +116,9 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
     <p className={styles.subtitle}>選ぶとレイヤーに追加</p>
     <div className={styles.libraryTools}>
       <button type="button" className={styles.captureButton} disabled={!connected || !canvasImage || busy || loading} title="キャンバスの見た目を透明PNGとして共有" onClick={shareCanvas}><Camera size={14} />今の画像を共有</button>
-      <label className={styles.uploadButton} aria-disabled={!connected || busy || loading}><ImagePlus size={14} />画像を登録<input ref={uploadInput} type="file" accept="image/png,image/jpeg,image/webp" aria-label="共有する画像を選ぶ" disabled={!connected || busy || loading} onChange={event => {
+      <label className={styles.uploadButton} aria-disabled={!connected || busy || loading}><ImagePlus size={14} />{busy ? "処理中…" : "画像を登録"}<input ref={uploadInput} type="file" accept="image/png,image/jpeg,image/webp" aria-label="共有する画像を選ぶ" disabled={!connected || busy || loading} onChange={event => {
         const selected = event.target.files?.[0]; event.target.value = "";
-        if (selected) choose(selected, selected.name.replace(/\.[^.]+$/, ""));
+        if (selected) void run(() => choose(selected, selected.name.replace(/\.[^.]+$/, "")));
       }} /></label>
     </div>
     {!connected ? <div className={styles.empty}>

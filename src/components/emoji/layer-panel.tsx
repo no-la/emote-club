@@ -113,7 +113,7 @@ export function LayerAppearance({ layer, loading, onTextChange, onLoadImage }: {
 }) {
   if (layer.kind === "text") return <TextSettings layer={layer} onChange={onTextChange} />;
   return <label className={styles.upload}>
-    <ImagePlus size={24} /><span>{loading ? "読み込み中…" : "画像を変更"}</span><small>PNG・JPEG・WebP / 5 MBまで</small>
+    <ImagePlus size={24} /><span>{loading ? "読み込み中…" : "画像を変更"}</span><small>PNG・JPEG・WebP / 20 MiBまで・大きな画像は自動縮小</small>
     <input type="file" accept="image/png,image/jpeg,image/webp" aria-label="選択レイヤーの画像を変更" disabled={loading} onChange={event => { onLoadImage(event.target.files?.[0], layer.id); event.target.value = ""; }} />
   </label>;
 }
