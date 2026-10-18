@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useImperativeHandle, type Ref } from "react";
 import { Send, X } from "lucide-react";
 import { emojiName, type RegistrationResult } from "@/lib/emoji/registration";
 import { guildUrl, type WorkshopIdentity } from "@/lib/emoji/shared";
@@ -8,7 +8,8 @@ import { WorkshopRequestError, workshopRequest } from "./workshop-account";
 import styles from "./register-emoji.module.css";
 
 type Submission = { requestId: string; name: string };
-export default function RegisterEmoji({ identity, image, canExport }: { identity: WorkshopIdentity | null; image?: string; canExport: boolean }) {
+export type RegisterEmojiHandle = { open: () => void };
+export default function RegisterEmoji({ identity, image, canExport, controlRef }: { controlRef?: Ref<RegisterEmojiHandle>; identity: WorkshopIdentity | null; image?: string; canExport: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const inFlight = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -65,6 +66,7 @@ export default function RegisterEmoji({ identity, image, canExport }: { identity
     setBot(null); setBotError(""); setOpened(true);
     dialog.current?.showModal();
   }
+  useImperativeHandle(controlRef, () => ({ open }));
   async function submit() {
     if (inFlight.current || !allowed || !bot?.installed || !preview || !emojiName(name) || submission) return;
     const attempt = { requestId: crypto.randomUUID(), name };

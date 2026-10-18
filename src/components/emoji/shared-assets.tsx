@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useImperativeHandle, type Ref, type ReactNode } from "react";
 import Image from "next/image";
 import { Images, Plus, RefreshCw, X, Camera, ImagePlus, MoreHorizontal } from "lucide-react";
 import { assetName, guildUrl, SHARED_IMAGE_BYTES, type SharedAsset, type WorkshopIdentity } from "@/lib/emoji/shared";
@@ -31,7 +31,9 @@ function AssetCard({ asset, busy, canAdd, onUse, onRename, onDelete }: { asset: 
   </li>;
 }
 
-export default function SharedAssets({ identity, identityError, canAdd, onUse, onRefreshIdentity, canvasImage, canvasName }: {
+export type SharedAssetsHandle = { shareCanvas: () => void };
+export default function SharedAssets({ identity, identityError, canAdd, onUse, onRefreshIdentity, canvasImage, canvasName, controlRef, headingAction }: {
+  controlRef?: Ref<SharedAssetsHandle>; headingAction?: ReactNode;
   identity: WorkshopIdentity | null; identityError: string; canAdd: boolean;
   onUse: (file: File) => Promise<void>; onRefreshIdentity: () => Promise<void>;
   canvasImage?: string; canvasName: string;
@@ -95,21 +97,23 @@ export default function SharedAssets({ identity, identityError, canAdd, onUse, o
       if (active.current) (uploading ? setUploadError : setError)(error instanceof Error ? error.message : "処理できませんでした。");
     } finally { operation.current = false; if (active.current) setBusy(false); }
   }
+  function shareCanvas() {
+    if (!connected || busy || loading || !canvasImage) return;
+    const captured = canvasImage;
+    const capturedName = canvasName;
+    void run(async () => {
+      const blob = await (await fetch(captured)).blob();
+      if (active.current) choose(new File([blob], "canvas.png", { type: "image/png" }), capturedName || "作った絵文字");
+    });
+  }
+  useImperativeHandle(controlRef, () => ({ shareCanvas }));
   return <section className={styles.library} aria-labelledby="shared-assets-title">
-    <header className={styles.libraryHeading}><h2 id="shared-assets-title"><Images size={16} />共有素材</h2>
+    <header className={styles.libraryHeading}><h2 id="shared-assets-title"><Images size={16} />共有素材</h2><span className={styles.mobileHeadingAction}>{headingAction}</span>
       <button type="button" aria-label="共有素材を更新" title="一覧を更新" disabled={!connected || busy || loading} onClick={() => void load()}><RefreshCw size={14} /></button>
     </header>
     <p className={styles.subtitle}>選ぶとレイヤーに追加</p>
     <div className={styles.libraryTools}>
-      <button type="button" className={styles.captureButton} disabled={!connected || !canvasImage || busy || loading} title="キャンバスの見た目を透明PNGとして共有" onClick={() => {
-        if (!canvasImage) return;
-        const captured = canvasImage;
-        const capturedName = canvasName;
-        void run(async () => {
-          const blob = await (await fetch(captured)).blob();
-          if (active.current) choose(new File([blob], "canvas.png", { type: "image/png" }), capturedName || "作った絵文字");
-        });
-      }}><Camera size={14} />今の画像を共有</button>
+      <button type="button" className={styles.captureButton} disabled={!connected || !canvasImage || busy || loading} title="キャンバスの見た目を透明PNGとして共有" onClick={shareCanvas}><Camera size={14} />今の画像を共有</button>
       <label className={styles.uploadButton} aria-disabled={!connected || busy || loading}><ImagePlus size={14} />画像を登録<input ref={uploadInput} type="file" accept="image/png,image/jpeg,image/webp" aria-label="共有する画像を選ぶ" disabled={!connected || busy || loading} onChange={event => {
         const selected = event.target.files?.[0]; event.target.value = "";
         if (selected) choose(selected, selected.name.replace(/\.[^.]+$/, ""));

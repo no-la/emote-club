@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUp, ArrowDown, Copy, Trash2, Type, ImagePlus, Sparkles, GripVertical } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState, useRef, useEffect, type PointerEvent, type ReactNode } from "react";
 import { layerName, type EmojiLayer, type TextLayer, type TextAppearance } from "@/lib/emoji/model";
 import { ColorPalette, Slider } from "./editor-controls";
 import FontPicker from "./font-picker";
@@ -17,7 +17,40 @@ export default function LayerPanel({ layers, selected, loading, imageError, onSe
 }) {
   const [dragged, setDragged] = useState<string | null>(null);
   const [drop, setDrop] = useState<{ id: string; before: boolean } | null>(null);
-  function clearDrag() { setDragged(null); setDrop(null); }
+  const list = useRef<HTMLUListElement>(null);
+  const touchDrag = useRef<{ id: string; pointer: number; y: number; target: { id: string; before: boolean } | null } | null>(null);
+  const frame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
+  function clearDrag() { cancelAnimationFrame(frame.current); touchDrag.current = null; setDragged(null); setDrop(null); }
+  function trackTouch() {
+    const drag = touchDrag.current, element = list.current;
+    if (!drag || !element) return;
+    const bounds = element.getBoundingClientRect();
+    const speed = drag.y < bounds.top + 32 ? -8 : drag.y > bounds.bottom - 32 ? 8 : 0;
+    element.scrollTop += speed;
+    const rows = [...element.querySelectorAll<HTMLElement>("[data-layer-row]")];
+    const y = Math.max(bounds.top + 1, Math.min(bounds.bottom - 1, drag.y));
+    const target = rows.find(row => { const r = row.getBoundingClientRect(); return y >= r.top && y <= r.bottom; });
+    if (target) {
+      const r = target.getBoundingClientRect();
+      drag.target = target.dataset.layerRow === drag.id ? null : { id: target.dataset.layerRow!, before: y < r.top + r.height / 2 };
+      setDrop(previous => previous?.id === drag.target?.id && previous?.before === drag.target?.before ? previous : drag.target);
+    }
+    frame.current = requestAnimationFrame(trackTouch);
+  }
+  function startTouch(event: PointerEvent<HTMLButtonElement>, id: string) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    touchDrag.current = { id, pointer: event.pointerId, y: event.clientY, target: null };
+    setDragged(id); onSelect(id);
+    frame.current = requestAnimationFrame(trackTouch);
+  }
+  function endTouch(event: PointerEvent<HTMLButtonElement>) {
+    const drag = touchDrag.current;
+    if (drag?.pointer === event.pointerId && drag.target) onReorder(drag.id, drag.target.id, drag.target.before);
+    clearDrag();
+  }
   const atLimit = layers.length >= MAX_LAYERS;
   const index = layers.findIndex(layer => layer.id === selected?.id);
   return <>
@@ -30,8 +63,8 @@ export default function LayerPanel({ layers, selected, loading, imageError, onSe
     </div>
     {children}
     {atLimit && <p className={styles.layerHint}>追加できるレイヤーは16個までです</p>}
-    <ul className={styles.layerList} aria-label="レイヤー（上が手前）">
-      {[...layers].reverse().map((layer, index) => <li key={layer.id}
+    <ul ref={list} className={styles.layerList} aria-label="レイヤー（上が手前）">
+      {[...layers].reverse().map((layer, index) => <li key={layer.id} data-layer-row={layer.id}
         data-dragging={dragged === layer.id || undefined}
         data-drop={drop?.id === layer.id ? (drop.before ? "before" : "after") : undefined}
         onDragOver={event => {
@@ -51,6 +84,7 @@ export default function LayerPanel({ layers, selected, loading, imageError, onSe
           clearDrag();
         }}>
 
+        <button type="button" className={styles.touchGrip} aria-label={`${layerName(layer)}を並べ替え`} onPointerDown={event => startTouch(event, layer.id)} onPointerMove={event => { if (touchDrag.current?.pointer === event.pointerId) touchDrag.current.y = event.clientY; }} onPointerUp={endTouch} onPointerCancel={clearDrag} onLostPointerCapture={clearDrag} onKeyDown={event => { if (event.key === "ArrowUp" || event.key === "ArrowDown") { event.preventDefault(); onMove(layer.id, event.key === "ArrowUp" ? 1 : -1); } }}><GripVertical size={20} /></button>
         <button type="button" draggable title="ドラッグで並べ替え"
           onDragStart={event => {
             event.dataTransfer.effectAllowed = "move";
@@ -86,15 +120,16 @@ export function LayerAppearance({ layer, loading, onTextChange, onLoadImage }: {
 
 function TextSettings({ layer, onChange }: { layer: TextLayer; onChange: (change: Partial<TextAppearance & { text: string }>) => void }) {
   return <>
-    <label className={styles.field}><span>文字 <small>{layer.text.length}/40</small></span>
+    <div className={styles.textGroup}><label className={styles.field}><span>文字 <small>{layer.text.length}/40</small></span>
       <textarea rows={2} maxLength={40} value={layer.text} placeholder="文字を入力" onChange={event => onChange({ text: event.target.value })} />
     </label>
-    <FontPicker value={layer.font} text={layer.text} onChange={font => onChange({ font })} />
+    <FontPicker value={layer.font} text={layer.text} onChange={font => onChange({ font })} /></div>
+    <div className={styles.spacingGroup}>
     <div className={styles.appearance}>
       <Slider label="字間" value={layer.letterSpacing ?? 0} min={-30} max={100} unit="%" onChange={letterSpacing => onChange({ letterSpacing })} />
       <Slider label="行間" value={layer.lineSpacing ?? 0} min={-50} max={150} unit="%" onChange={lineSpacing => onChange({ lineSpacing })} />
     </div>
-    <ColorPalette label="文字色" value={layer.color} onChange={color => onChange({ color })} />
+    </div><div className={styles.colorGroup}><ColorPalette label="文字色" value={layer.color} onChange={color => onChange({ color })} />
     <div className={styles.appearance}>
       <ColorPalette label="縁の色" value={layer.outlineColor} onChange={outlineColor => onChange({ outlineColor })} />
       <Slider label="縁の太さ" value={layer.outline} min={0} max={24} onChange={outline => onChange({ outline })} />
@@ -103,6 +138,6 @@ function TextSettings({ layer, onChange }: { layer: TextLayer; onChange: (change
       <ColorPalette label="影の色" value={layer.shadowColor} onChange={shadowColor => onChange({ shadowColor })} />
       <Slider label="影の距離" value={layer.shadow} min={0} max={24} onChange={shadow => onChange({ shadow })} />
       <Slider label="ぼかし" value={layer.shadowBlur} min={0} max={24} onChange={shadowBlur => onChange({ shadowBlur })} />
-    </div>
+    </div></div>
   </>;
 }

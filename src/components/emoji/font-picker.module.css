@@ -18,3 +18,10 @@
 @media (max-width: 480px) { .dialog { padding: 16px; } .list { grid-template-columns: 1fr; } }
 
 .trigger > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 900px) {
+  .dialog { width: 100%; max-width: 520px; max-height: calc(var(--viewport-height, 100dvh) - 16px); margin: auto auto 0; border-radius: 18px 18px 0 0; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); }
+  .dialog input { font-size: 16px; }
+  .dialog button { min-height: 44px; min-width: 44px; }
+  .trigger { min-height: 44px; }
+}

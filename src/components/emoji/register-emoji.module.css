@@ -20,3 +20,10 @@
 .botSetup { font-size: 12px; line-height: 1.6; }
 .botSetup:empty { display: none; }
 .botSetup a { display: inline-block; margin: 0 10px 8px 0; padding: 8px 12px; border-radius: 6px; background: #5ccad3; color: #172c30; text-decoration: none; font-weight: 600; }
+
+@media (max-width: 900px) {
+  .dialog { width: 100%; max-width: 520px; max-height: calc(var(--viewport-height, 100dvh) - 16px); margin: auto auto 0; border-radius: 18px 18px 0 0; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); }
+  .dialog input { font-size: 16px; }
+  .dialog button { min-height: 44px; min-width: 44px; }
+  .open { display: none; }
+}

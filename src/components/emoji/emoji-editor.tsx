@@ -2,25 +2,49 @@
 
 import { Fragment, useEffect, useRef, useState, type PointerEvent } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, RotateCcw, Sparkles } from "lucide-react";
-import { clamp, initialDraft, initialEffects, createTextLayer, layerName, MAX_IMAGE_BYTES, STAGE_SIZE, type EffectStack, type ElementId, type EmojiDraft, type Transform, type TextAppearance } from "@/lib/emoji/model";
+import { ArrowLeft, Download, RotateCcw, Sparkles, Type, Images, Layers, SlidersHorizontal, ChevronUp, X, Undo2, Redo2 } from "lucide-react";
+import { clamp, initialEffects, createTextLayer, layerName, MAX_IMAGE_BYTES, STAGE_SIZE, type EffectStack, type ElementId, type EmojiDraft, type Transform, type TextAppearance } from "@/lib/emoji/model";
 import type { createEmojiRenderer, RenderResult, ElementBounds } from "@/lib/emoji/renderer";
 import { loadFont } from "@/lib/emoji/fonts";
 import LayerPanel, { MAX_LAYERS, LayerAppearance } from "./layer-panel";
 import { Slider } from "./editor-controls";
 import EffectEditor from "./effect-editor";
-import SharedAssets from "./shared-assets";
-import RegisterEmoji from "./register-emoji";
+import SharedAssets, { type SharedAssetsHandle } from "./shared-assets";
+import RegisterEmoji, { type RegisterEmojiHandle } from "./register-emoji";
 import { useWorkshopIdentity, WorkshopAccount } from "./workshop-account";
 import { snapAxis } from "@/lib/emoji/snapping";
+import { useDraftHistory } from "./use-draft-history";
 import styles from "./emoji-editor.module.css";
 
+const mobileTabs = [["materials", "素材", Images], ["edit", "編集", SlidersHorizontal], ["layers", "レイヤー", Layers], ["effects", "効果", Sparkles]] as const;
 type Renderer = Awaited<ReturnType<typeof createEmojiRenderer>>;
 export default function EmojiEditor() {
   const { identity, error: identityError, refresh: refreshIdentity, setError: setIdentityError } = useWorkshopIdentity();
-  const [draft, setDraft] = useState(initialDraft);
-  const [selected, setSelected] = useState<ElementId | null>("initial-text");
+  const { draft, setDraft, canUndo, canRedo, begin, end, undo, redo } = useDraftHistory();
+  const [selectedId, setSelected] = useState<ElementId | null>("initial-text");
   const [panel, setPanel] = useState<"layers" | "effects">("layers");
+  const [mobileTab, setMobileTab] = useState("materials");
+  const [editSection, setEditSection] = useState("text");
+  const [expanded, setExpanded] = useState(false);
+  const root = useRef<HTMLElement>(null);
+  const exportDialog = useRef<HTMLDialogElement>(null);
+  const registerControl = useRef<RegisterEmojiHandle>(null);
+  const shareControl = useRef<SharedAssetsHandle>(null);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    function resize() {
+      // Leave pinch zoom to the browser; follow the keyboard and browser chrome.
+      if (viewport && viewport.scale === 1) {
+        root.current?.style.setProperty("--viewport-height", `${viewport.height}px`);
+        root.current?.style.setProperty("--viewport-top", `${viewport.offsetTop}px`);
+      }
+    }
+    resize();
+    viewport?.addEventListener("resize", resize);
+    viewport?.addEventListener("scroll", resize);
+    return () => { viewport?.removeEventListener("resize", resize); viewport?.removeEventListener("scroll", resize); };
+  }, []);
+  const expandButton = <button type="button" className={styles.mobileExpand} aria-label={expanded ? "パネルを縮小" : "パネルを拡大"} aria-expanded={expanded} onClick={() => setExpanded(value => !value)}><ChevronUp size={18} style={{ transform: expanded ? "rotate(180deg)" : undefined }} /></button>;
   const [ready, setReady] = useState(false);
   const [result, setResult] = useState<(RenderResult & { draft: EmojiDraft }) | null>(null);
   const [error, setError] = useState("");
@@ -79,6 +103,7 @@ export default function EmojiEditor() {
     return () => { cancelled = true; cancelAnimationFrame(frame); };
   }, [draft, ready]);
 
+  const selected = draft.layers.some(layer => layer.id === selectedId) ? selectedId : draft.layers.at(-1)?.id ?? null;
   const selectedLayer = draft.layers.find(layer => layer.id === selected);
   function updateLayerEffects(id: string, stack: EffectStack) {
     setDraft(previous => ({ ...previous, layers: previous.layers.map(layer => layer.id === id ? { ...layer, ...stack } : layer) }));
@@ -94,7 +119,7 @@ export default function EmojiEditor() {
     if (loadingImage || draft.layers.length >= MAX_LAYERS) return;
     const layer = createTextLayer(crypto.randomUUID());
     setDraft(previous => ({ ...previous, layers: [...previous.layers, layer] }));
-    selectLayer(layer.id);
+    selectLayer(layer.id); setMobileTab("edit"); setEditSection("text");
   }
   function moveLayer(id: string, delta: number) {
     setDraft(previous => {
@@ -185,6 +210,7 @@ export default function EmojiEditor() {
   }
   function beginDrag(event: PointerEvent<HTMLButtonElement>, id: ElementId) {
     if (event.button !== 0) return;
+    begin("pointer");
     selectLayer(id);
     const layer = draft.layers.find(layer => layer.id === id);
     if (!layer) return;
@@ -239,24 +265,26 @@ export default function EmojiEditor() {
   const currentResult = result?.draft === draft && !error;
   const canExport = ready && hasContent && currentResult && !loadingImage;
 
-  return <main className={styles.workshop}>
+  function savePng() {
+    if (!result || !canExport) return;
+    const link = document.createElement("a");
+    link.href = result.exportUrl; link.download = "emote-club.png"; link.click();
+  }
+  return <main onPointerDownCapture={() => begin("pointer")} onFocusCapture={event => { if (event.target instanceof HTMLTextAreaElement || (event.target instanceof HTMLInputElement && ["text", "number", "range"].includes(event.target.type))) begin(event.target instanceof HTMLInputElement && event.target.type === "range" ? "pointer" : "text"); }} onBlurCapture={end} ref={root} className={styles.workshop} data-mobile-panel={mobileTab} data-edit-section={editSection} data-expanded={expanded}>
     <div className={styles.heading}>
       <div className={styles.headingIdentity}><Link href="/" className={styles.backLink}>Emote Club</Link><h1>絵文字エディタ</h1></div>
+      <div className={styles.mobileHeaderActions}><button type="button" aria-label="文字を追加" disabled={loadingImage || draft.layers.length >= MAX_LAYERS} onClick={addText}><Type size={19} /></button><button type="button" className={styles.download} onClick={() => exportDialog.current?.showModal()}>書き出す</button></div>
       <WorkshopAccount identity={identity} error={identityError} onRefresh={refreshIdentity} onError={setIdentityError} />
-      <RegisterEmoji key={`${identity?.user?.id || "guest"}:${identity?.guild?.id || ""}`} identity={identity} image={result?.url} canExport={!!canExport} />
-      <button className={styles.download} type="button" disabled={!canExport} onClick={() => {
-        if (!result || !canExport) return;
-        const link = document.createElement("a");
-        link.href = result.exportUrl; link.download = "emote-club.png"; link.click();
-      }}><Download size={16} /> PNGを保存</button>
+      <RegisterEmoji key={`${identity?.user?.id || "guest"}:${identity?.guild?.id || ""}`} controlRef={registerControl} identity={identity} image={canExport ? result?.url : undefined} canExport={!!canExport} />
+      <button className={styles.download} type="button" disabled={!canExport} onClick={savePng}><Download size={16} /> PNGを保存</button>
     </div>
     <div className={styles.workspace}>
       <aside className={styles.assetSidebar} aria-label="共有素材とレイヤー">
-        <SharedAssets key={`${identity?.user?.id || "guest"}:${identity?.guild?.id || ""}`} identity={identity} identityError={identityError}
+        <SharedAssets key={`${identity?.user?.id || "guest"}:${identity?.guild?.id || ""}`} controlRef={shareControl} headingAction={expandButton} identity={identity} identityError={identityError}
           canAdd={!loadingImage && draft.layers.length < MAX_LAYERS} onUse={file => loadImage(file)} onRefreshIdentity={refreshIdentity}
           canvasImage={canExport ? result?.url : undefined} canvasName={draft.layers.filter(layer => layer.kind === "text").map(layer => layer.text).join(" ").slice(0, 80)} />
         <section className={styles.layerSidebar} aria-label="レイヤー一覧">
-          <div className={styles.sidebarHeading}><h2>レイヤー</h2><small>上が手前</small></div>
+          <div className={styles.sidebarHeading}><h2>レイヤー</h2><small>上が手前</small>{expandButton}</div>
           <LayerPanel layers={draft.layers} selected={panel === "layers" ? selectedLayer : undefined} loading={loadingImage} imageError={imageError}
             onSelect={selectLayer} onAddText={addText} onLoadImage={(file, id) => { void loadImage(file, id); }}
             onReorder={reorderLayer} onMove={moveLayer} onDuplicate={duplicateLayer} onRemove={removeLayer} />
@@ -264,8 +292,9 @@ export default function EmojiEditor() {
       </aside>
       <section className={styles.previewPanel} aria-label="絵文字のプレビュー">
         <div className={styles.previewTools}>
+          <div className={styles.mobileHistory}><button type="button" aria-label="元に戻す" disabled={!canUndo || loadingImage} onClick={undo}><Undo2 size={18} /></button><button type="button" aria-label="やり直す" disabled={!canRedo || loadingImage} onClick={redo}><Redo2 size={18} /></button></div>
           <button type="button" className={styles.quietButton} onClick={autoLayout} title="画像と文字の位置・大きさを自動で整える"><RotateCcw size={14} /> 自動配置</button>
-          <button type="button" className={styles.quietButton} aria-label="全体の効果" aria-pressed={panel === "effects"} onClick={() => setPanel("effects")}><Sparkles size={14} />全体の効果{draft.effects.length > 0 && <span className={styles.effectBadge}>{draft.effects.length}</span>}</button>
+          <button type="button" className={`${styles.quietButton} ${styles.globalEffectsButton}`} aria-label="全体の効果" aria-pressed={panel === "effects"} onClick={() => { setPanel("effects"); setMobileTab("effects"); }}><Sparkles size={14} />全体の効果{draft.effects.length > 0 && <span className={styles.effectBadge}>{draft.effects.length}</span>}</button>
           <div className={styles.backgrounds} aria-label="確認用の背景色">
             {[["checker", "透明"], ["light", "明るい背景"], ["dark", "暗い背景"]].map(([value, label]) =>
               <button key={value} type="button" className={styles[value]} title={label} aria-label={label} onClick={() => setBackground(value)} aria-pressed={background === value} />)}
@@ -288,7 +317,7 @@ export default function EmojiEditor() {
                 className={`${styles.selection} ${selected === id && panel === "layers" ? styles.selected : ""}`}
                 style={{ left: `${b.x / STAGE_SIZE * 100}%`, top: `${b.y / STAGE_SIZE * 100}%`, width: `${b.width / STAGE_SIZE * 100}%`, height: `${b.height / STAGE_SIZE * 100}%` }}
                 onPointerDown={(event) => beginDrag(event, id)} onPointerMove={moveDrag}
-                onPointerUp={finishDrag} onPointerCancel={finishDrag} onLostPointerCapture={finishDrag}
+                onPointerUp={event => { const current = drag.current; if (current && !current.resize && Math.hypot(event.clientX - current.x, event.clientY - current.y) < 5) setMobileTab("edit"); finishDrag(); }} onPointerCancel={finishDrag} onLostPointerCapture={finishDrag}
                 onFocus={() => selectLayer(id)} onKeyDown={(event) => {
                   const delta = event.shiftKey ? 10 : 2;
                   const offset: Record<string, [number, number]> = { ArrowLeft: [-delta, 0], ArrowRight: [delta, 0], ArrowUp: [0, -delta], ArrowDown: [0, delta] };
@@ -328,12 +357,16 @@ export default function EmojiEditor() {
       </section>
       <section className={styles.inspector} aria-label="絵文字の編集">
         <div className={styles.inspectorHeading}>
+          {expandButton}<button className={styles.mobileDone} type="button" onClick={() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); }}>完了</button>
           <h2>{panel === "effects" ? "全体の効果" : selectedLayer ? layerName(selectedLayer) : "レイヤーを選択"}</h2>
           {panel === "effects" && selectedLayer && <button type="button" className={styles.quietButton} aria-label="レイヤーの編集に戻る" title="レイヤーの編集に戻る" onClick={() => setPanel("layers")}><ArrowLeft size={15} /></button>}
         </div>
+        <div className={styles.mobileCategories} aria-label="編集項目">
+          {mobileTab === "effects" ? <><button type="button" aria-pressed={panel === "layers"} disabled={!selectedLayer} onClick={() => setPanel("layers")}>このレイヤー</button><button type="button" aria-pressed={panel === "effects"} onClick={() => setPanel("effects")}>全体</button></> : <>{[["text", selectedLayer?.kind === "image" ? "画像" : "文字"], ["color", "色・縁・影"], ["spacing", "字間・行間"], ["transform", "大きさ・透明度"]].filter(([key]) => selectedLayer?.kind !== "image" || key === "text" || key === "transform").map(([key, label]) => <button key={key} type="button" aria-pressed={editSection === key} onClick={() => setEditSection(key)}>{label}</button>)}</>}
+        </div>
         <div className={styles.settings} key={panel === "layers" ? selectedLayer?.id ?? "empty" : "all"}>
           {panel === "layers" && selectedLayer && <>
-            <LayerAppearance layer={selectedLayer} loading={loadingImage} onTextChange={updateText} onLoadImage={(file, id) => { void loadImage(file, id); }} />
+            <div className={styles.layerAppearance}><LayerAppearance layer={selectedLayer} loading={loadingImage} onTextChange={updateText} onLoadImage={(file, id) => { void loadImage(file, id); }} /></div>
             {currentTransform && <div className={styles.transform}>
               <Slider label="不透明度" value={Math.round((selectedLayer.opacity ?? 1) * 100)} min={0} max={100} unit="%" onChange={value => setDraft(previous => ({ ...previous, layers: previous.layers.map(layer => layer.id === selectedLayer.id ? { ...layer, opacity: value / 100 } : layer) }))} />
               <Slider label="大きさ" value={Math.round(currentTransform.scale * 100)} min={20} max={400} unit="%" onChange={value => transform(selectedLayer.id, { scale: value / 100 })} />
@@ -345,11 +378,24 @@ export default function EmojiEditor() {
                 </div>
               </details>
             </div>}
-            <EffectEditor value={selectedLayer} label="効果" onChange={stack => updateLayerEffects(selectedLayer.id, stack)} />
+            <div className={styles.layerEffects}><EffectEditor value={selectedLayer} label="効果" onChange={stack => updateLayerEffects(selectedLayer.id, stack)} /></div>
           </>}
           {panel === "effects" && <EffectEditor value={draft} label="効果" onChange={stack => setDraft(previous => ({ ...previous, ...stack }))} />}
         </div>
       </section>
     </div>
+    <nav className={styles.mobileNav} aria-label="編集パネル">
+      {mobileTabs.map(([key, label, Icon]) => <button key={key} type="button" aria-pressed={mobileTab === key} onClick={() => {
+        setMobileTab(key);
+        if (key === "edit") setPanel("layers");
+        if (key === "effects" && !selectedLayer) setPanel("effects");
+      }}><Icon size={20} />{label}</button>)}
+    </nav>
+    <dialog ref={exportDialog} className={styles.exportDialog} aria-labelledby="export-title">
+      <header><h2 id="export-title">書き出す</h2><button type="button" aria-label="書き出しを閉じる" onClick={() => exportDialog.current?.close()}><X size={20} /></button></header>
+      <button type="button" disabled={!canExport} onClick={() => { savePng(); exportDialog.current?.close(); }}><Download size={22} /><span>PNGを保存<small>512 × 512・透過PNG</small></span></button>
+      <button type="button" onClick={() => { exportDialog.current?.close(); registerControl.current?.open(); }}><Sparkles size={22} /><span>サーバーに追加<small>Discord用・128 × 128</small></span></button>
+      <button type="button" disabled={!canExport || !identity?.guild || !identity?.storageConfigured} onClick={() => { exportDialog.current?.close(); setMobileTab("materials"); requestAnimationFrame(() => shareControl.current?.shareCanvas()); }}><Images size={22} /><span>共有素材にする<small>選択中のサーバーのみんなに共有</small></span></button>
+    </dialog>
   </main>;
 }
