@@ -5,15 +5,9 @@ import { LogIn, LogOut } from "lucide-react";
 import { guildUrl, type WorkshopIdentity } from "@/lib/emoji/shared";
 import styles from "./shared-assets.module.css";
 
-export class WorkshopRequestError extends Error {
-  constructor(message: string, public status: number) { super(message); }
-}
-export async function workshopRequest<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, { ...options, cache: "no-store" });
-  const value = await response.json();
-  if (!response.ok) throw new WorkshopRequestError(value.error || "処理できませんでした。もう一度お試しください。", response.status);
-  return value as T;
-}
+import { WorkshopRequestError, workshopRequest } from "@/lib/emoji/workshop-request";
+export { WorkshopRequestError, workshopRequest } from "@/lib/emoji/workshop-request";
+
 const loginErrors: Record<string, string> = {
   cancelled: "ログインをキャンセルしました。", not_member: "このサーバーのメンバーだけが共有素材を利用できます。",
   invalid_state: "ログインの有効期限が切れました。もう一度お試しください。", oauth_failed: "ログインできませんでした。もう一度お試しください。",
