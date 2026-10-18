@@ -405,8 +405,8 @@ export default function EmojiEditor() {
       </section>
     </div>
     <nav className={styles.mobileNav} aria-label="編集パネル">
-      {mobileTabs.map(([key, label, Icon]) => <button key={key} type="button" aria-pressed={mobileTab === key} onClick={() => {
-        finishTyping(); setExpanded(false); setMobileTab(key);
+      {mobileTabs.map(([key, label, Icon]) => <button key={key} type="button" aria-pressed={mobileTab === key} aria-expanded={mobileTab === key} onClick={() => {
+        finishTyping(); setExpanded(false); setMobileTab(current => current === key ? "" : key);
         if (key === "edit") setPanel("layers");
         if (key === "effects" && !selectedLayer) setPanel("effects");
       }}><Icon size={20} />{label}</button>)}
