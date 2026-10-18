@@ -389,13 +389,12 @@ export default function EmojiEditor() {
               placement={currentTransform && <div className={styles.transform}><div className={styles.sizeGroup}>
 
               <Slider label="大きさ" value={Math.round(currentTransform.scale * 100)} min={20} max={400} unit="%" onChange={value => transform(selectedLayer.id, { scale: value / 100 })} />
-              </div><details className={styles.details}>
-                <summary>位置を数値で調整</summary>
+              </div><div className={styles.positionSettings}>
                 <div className={styles.positionFields}>
-                  <label>横<input type="number" min={0} max={128} value={Math.round(currentTransform.x / 4)} onChange={event => transform(selectedLayer.id, { x: clamp(Number(event.target.value) * 4, 0, STAGE_SIZE) })} /></label>
-                  <label>縦<input type="number" min={0} max={128} value={Math.round(currentTransform.y / 4)} onChange={event => transform(selectedLayer.id, { y: clamp(Number(event.target.value) * 4, 0, STAGE_SIZE) })} /></label>
+                  <label>横位置<input type="number" min={0} max={128} value={Math.round(currentTransform.x / 4)} onChange={event => transform(selectedLayer.id, { x: clamp(Number(event.target.value) * 4, 0, STAGE_SIZE) })} /></label>
+                  <label>縦位置<input type="number" min={0} max={128} value={Math.round(currentTransform.y / 4)} onChange={event => transform(selectedLayer.id, { y: clamp(Number(event.target.value) * 4, 0, STAGE_SIZE) })} /></label>
                 </div>
-              </details>
+              </div>
             </div>}
             /></div>
             <div className={styles.layerEffects}><EffectEditor value={selectedLayer} label="効果" onChange={stack => updateLayerEffects(selectedLayer.id, stack)} /></div>

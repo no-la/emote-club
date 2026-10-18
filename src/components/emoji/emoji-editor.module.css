@@ -78,9 +78,7 @@
 .appearance { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: center; margin-top: 10px; }
 .appearance .slider { margin-top: 0; }
 .transform { margin: 12px 0 12px; }
-.details { padding-top: 8px; margin-top: 8px; }
-.details summary { font-size: 11px; cursor: pointer; color: #a8b2c0; }
-.details[open] summary { margin-bottom: 10px; }
+.positionSettings { margin-top: 14px; }
 .positionFields { display: flex; gap: 12px; }
 .positionFields label { flex: 1; display: grid; gap: 6px; font-size: 11px; }
 .upload { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 10px; border: 1px dashed #606772; border-radius: 7px; color: #dce0e6; font-size: 13px; cursor: pointer; }
@@ -187,7 +185,7 @@
   .workshop:not([data-edit-section="text"]) .layerAppearance > .upload { display: none; }
   .slider input { min-height: 32px; }
   .slider { margin-top: 10px; }
-  .colorTrigger, .effectTools > button, .details summary { min-height: 44px; }
+  .colorTrigger, .effectTools > button { min-height: 44px; }
   .positionFields input, .popover input { font-size: 16px; }
   .effectMenu > button { min-height: 44px; }
   .popoverHeader button { min-height: 44px; min-width: 44px; justify-content: center; }
@@ -254,10 +252,10 @@
   .mobileCategories button { flex: 1 0 auto; padding: 8px; font-size: 13px; }
   .mobileCategories .addTextButton { flex: 0 0 44px; display: grid; place-items: center; }
   .field textarea { min-height: 80px; resize: none; }
-  .workshop .transform > .details { display: none; }
+  .workshop .transform > .positionSettings { display: none; }
   .workshop[data-edit-section="advanced"] .spacingGroup { display: contents; }
   .workshop[data-edit-section="advanced"] .transform { display: block; }
-  .workshop[data-edit-section="advanced"] .transform > .details { display: block; }
+  .workshop[data-edit-section="advanced"] .transform > .positionSettings { display: block; }
   .workshop[data-edit-section="advanced"] .sizeGroup { display: none; }
   .workshop[data-mobile-panel="effects"] .transform { display: none; }
   .workshop[data-typing="true"] .heading,
