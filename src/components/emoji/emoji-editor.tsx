@@ -106,6 +106,18 @@ export default function EmojiEditor() {
       return { ...previous, layers };
     });
   }
+  function reorderLayer(id: string, targetId: string, before: boolean) {
+    setDraft(previous => {
+      if (id === targetId) return previous;
+      const display = [...previous.layers].reverse();
+      const layer = display.find(item => item.id === id);
+      if (!layer || !display.some(item => item.id === targetId)) return previous;
+      const remaining = display.filter(item => item.id !== id);
+      const index = remaining.findIndex(item => item.id === targetId);
+      remaining.splice(index + (before ? 0 : 1), 0, layer);
+      return { ...previous, layers: remaining.reverse() };
+    });
+  }
   function duplicateLayer(id: string) {
     const original = draft.layers.find(layer => layer.id === id);
     if (!original || loadingImage || draft.layers.length >= MAX_LAYERS) return;
@@ -137,7 +149,7 @@ export default function EmojiEditor() {
     setDraft(previous => ({ ...previous, layers: previous.layers.map((layer, index) => {
       const bounds = result?.bounds[layer.id];
       const scale = bounds ? Math.min(1, (width - 32) / (bounds.width / layer.transform.scale), (height - 32) / (bounds.height / layer.transform.scale)) : 1;
-      return { ...layer, transform: { x: (index % columns + 0.5) * width, y: (Math.floor(index / columns) + 0.5) * height, scale: clamp(scale, 0.2, 2) } };
+      return { ...layer, transform: { x: (index % columns + 0.5) * width, y: (Math.floor(index / columns) + 0.5) * height, scale: clamp(scale, 0.2, 4) } };
     }) }));
   }
   async function loadImage(file?: File, replaceId?: string) {
@@ -196,7 +208,7 @@ export default function EmojiEditor() {
       const dy = (event.clientY - current.y) * ratio;
       // Project onto the diagonal to preserve aspect ratio and the opposite corner.
       const factor = 1 + (sx * dx * width + sy * dy * height) / Math.max(width * width + height * height, 1);
-      const scale = clamp(current.start.scale * factor, 0.2, 2);
+      const scale = clamp(current.start.scale * factor, 0.2, 4);
       const change = scale / current.start.scale - 1;
       transform(current.id, {
         scale,
@@ -247,7 +259,7 @@ export default function EmojiEditor() {
           <div className={styles.sidebarHeading}><h2>レイヤー</h2><small>上が手前</small></div>
           <LayerPanel layers={draft.layers} selected={panel === "layers" ? selectedLayer : undefined} loading={loadingImage} imageError={imageError}
             onSelect={selectLayer} onAddText={addText} onLoadImage={(file, id) => { void loadImage(file, id); }}
-            onMove={moveLayer} onDuplicate={duplicateLayer} onRemove={removeLayer} />
+            onReorder={reorderLayer} onMove={moveLayer} onDuplicate={duplicateLayer} onRemove={removeLayer} />
         </section>
       </aside>
       <section className={styles.previewPanel} aria-label="絵文字のプレビュー">
@@ -297,7 +309,7 @@ export default function EmojiEditor() {
                       if (!direction) return;
                       event.preventDefault();
                       const value = layer.transform;
-                      transform(id, { scale: clamp(value.scale + direction * (event.shiftKey ? 0.1 : 0.01), 0.2, 2) });
+                      transform(id, { scale: clamp(value.scale + direction * (event.shiftKey ? 0.1 : 0.01), 0.2, 4) });
                     }} />)}
               </Fragment>;
             })}
@@ -323,7 +335,7 @@ export default function EmojiEditor() {
           {panel === "layers" && selectedLayer && <>
             <LayerAppearance layer={selectedLayer} loading={loadingImage} onTextChange={updateText} onLoadImage={(file, id) => { void loadImage(file, id); }} />
             {currentTransform && <div className={styles.transform}>
-              <Slider label="大きさ" value={Math.round(currentTransform.scale * 100)} min={20} max={200} unit="%" onChange={value => transform(selectedLayer.id, { scale: value / 100 })} />
+              <Slider label="大きさ" value={Math.round(currentTransform.scale * 100)} min={20} max={400} unit="%" onChange={value => transform(selectedLayer.id, { scale: value / 100 })} />
               <details className={styles.details}>
                 <summary>位置を数値で調整</summary>
                 <div className={styles.positionFields}>

@@ -117,3 +117,12 @@
 .workshop button:focus-visible, .workshop input:focus-visible, .workshop textarea:focus-visible, .workshop summary:focus-visible, .backLink:focus-visible, .addImage:focus-within, .upload:focus-within { outline: 2px solid #5ccad3; outline-offset: 2px; }
 
 @media (max-width:1200px) { .heading { flex-wrap:wrap; gap:8px; } .headingIdentity { margin-right:auto; } }
+
+.layerList li { position: relative; }
+.layerList li[data-dragging] { opacity: .45; }
+.layerList li[data-drop]::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: #5ccad3; pointer-events: none; z-index: 1; }
+.layerList li[data-drop="before"]::after { top: 0; }
+.layerList li[data-drop="after"]::after { bottom: 0; }
+.layerList button[draggable] { cursor: grab; }
+.layerList button[draggable]:active { cursor: grabbing; }
+.layerGrip { color: #818995; }

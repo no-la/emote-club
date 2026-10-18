@@ -1,4 +1,4 @@
-import { Application, Container, Rectangle, Sprite, Text, Texture } from "pixi.js";
+import { Application, CanvasTextMetrics, Container, Rectangle, Sprite, Text, Texture } from "pixi.js";
 import { createEffectPipeline } from "./effect-pipeline";
 import { FONT_FAMILIES, OUTPUT_SIZE, STAGE_SIZE, type EmojiDraft, type ElementId } from "./model";
 
@@ -65,12 +65,18 @@ export async function createEmojiRenderer(host: HTMLElement) {
           object.text = layer.text;
           object.style = {
             fontFamily: FONT_FAMILIES[layer.font], fontSize: 170,
+            letterSpacing: 170 * (layer.letterSpacing ?? 0) / 100,
             fontWeight: layer.font === "sans" || layer.font === "serif" ? "bold" : "normal",
             fill: layer.color, align: "center", padding: 32,
             stroke: layer.outline ? { color: layer.outlineColor, width: layer.outline, join: "round" } : undefined,
             dropShadow: layer.shadow || layer.shadowBlur ? { color: layer.shadowColor, alpha: 0.65, blur: layer.shadowBlur, distance: layer.shadow, angle: Math.PI / 4 } : undefined,
             wordWrap: false,
           };
+          if (layer.lineSpacing) {
+            const metrics = CanvasTextMetrics.measureText(layer.text, object.style);
+            // Use lineHeight so Pixi reserves the extra space above/below the lines too.
+            object.style.lineHeight = Math.max(1, metrics.fontProperties.fontSize + 170 * layer.lineSpacing / 100);
+          }
           object.scale.set(1);
           const fit = Math.min(1, 450 / Math.max(object.width, 1), 440 / Math.max(object.height, 1));
           object.scale.set(fit * layer.transform.scale);

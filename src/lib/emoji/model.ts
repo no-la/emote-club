@@ -13,6 +13,8 @@ export type EffectId = keyof typeof EFFECTS;
 export type TextAppearance = {
   font: FontId;
   color: string;
+  letterSpacing: number;
+  lineSpacing: number;
   outlineColor: string;
   outline: number;
   shadow: number;
@@ -63,7 +65,7 @@ export const FONT_FAMILIES = Object.fromEntries(Object.entries(FONTS).map(([id, 
 export function createTextLayer(id: string, text = "文字"): TextLayer {
   return {
     ...initialEffects(), id, kind: "text", text, font: "dela", color: "#ffe477", outlineColor: "#292329",
-    outline: 10, shadow: 0, shadowColor: "#121218", shadowBlur: 0,
+    letterSpacing: 0, lineSpacing: 0, outline: 10, shadow: 0, shadowColor: "#121218", shadowBlur: 0,
     transform: { x: 256, y: 256, scale: 1 },
   };
 }
