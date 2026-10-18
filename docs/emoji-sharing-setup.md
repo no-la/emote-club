@@ -24,6 +24,9 @@ Next.jsは `output: standalone`。デプロイナウでは `npm ci --ignore-scri
 
 ## ローカル開発
 
+スマホなどからLAN経由で確認する場合は、開発サーバーを `DEV_ALLOWED_ORIGINS=192.168.0.21 pnpm dev --hostname 0.0.0.0` のように起動します。IPは開発機の現在のLANアドレスに置き換えます（複数はカンマ区切り）。この設定は開発用HMR接続の許可だけに使い、OAuthのリダイレクト先は変更しません。未設定の場合、LANからのHMR接続が拒否され、再接続失敗によりページが繰り返しリロードされます。
+
+
 Next.js 16.4.2では開発用Reactデバッグチャネルの接続待ちで画面の初期化が止まり、「ログイン状態を確認中…」のままになる場合があります。`next.config.ts` の `experimental.reactDebugChannel: false` で回避しています。認証APIが正常でもエディタ操作まで反応しない場合は、この設定と開発サーバーの再起動を確認してください。
 
 ## 障害復旧
