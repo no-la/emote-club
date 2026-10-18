@@ -31,6 +31,12 @@ export async function DELETE(request: Request, context: Context) {
     const store = assetStore();
     const row = await findAsset(store, (await context.params).id, member);
     requireAssetManager(row, member);
+    if (row.status === "pending") {
+      // A live direct-upload reservation also protects an in-flight normalization from deletion.
+      const upload = await store.from("emoji_asset_uploads").select("id").eq("id", row.id).eq("guild_id", member.guild.id).gt("expires_at", new Date().toISOString()).maybeSingle();
+      if (upload.error) throw upload.error;
+      if (upload.data) throw new ApiError(409, "asset_busy", "中断したアップロードは有効期限後に自動で削除されます（開始から3時間後）。");
+    }
     if (row.status === "pending" && Date.now() - Date.parse(row.created_at) < 10 * 60_000) throw new ApiError(409, "asset_busy", "素材を登録中です。中断した登録は10分後に削除できます。");
     const marked = await store.from("emoji_assets").update({ status: "deleting" }).eq("guild_id", member.guild.id).eq("id", row.id);
     if (marked.error) throw marked.error;
