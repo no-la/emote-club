@@ -8,12 +8,12 @@
 .dialog h2 { font-size: 16px; margin: 0; }
 .dialog header button { border: 0; color: inherit; background: transparent; cursor: pointer; display: flex; padding: 6px; }
 .dialog input { flex-shrink: 0; border: 1px solid #555962; border-radius: 6px; padding: 10px 12px; background: #1d1f24; color: inherit; font: inherit; font-size: 13px; width: 100%; box-sizing: border-box; }
-.list { overflow-y: auto; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 2px; overscroll-behavior: contain; }
+.list { overflow-y: auto; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: max-content; align-content: start; gap: 10px; padding: 2px; overscroll-behavior: contain; }
 .list button { display: flex; flex-direction: column; gap: 14px; background: #303238; color: inherit; border: 1px solid #4b4f59; border-radius: 8px; padding: 12px; min-width: 0; text-align: left; cursor: pointer; }
 .list button[aria-pressed="true"] { border-color: #5ccad3; background: #5ccad310; }
 .list button:disabled { cursor: wait; color: #a6abb5; }
 .name { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; }
-.sample { display: block; font-size: 32px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 100px; overflow: hidden; font-weight: normal; }
+.sample { display: block; flex-shrink: 0; min-height: 48px; font-size: 32px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 100px; overflow: hidden; font-weight: normal; }
 .dialog button:focus-visible, .trigger:focus-visible { outline: 2px solid #5ccad3; outline-offset: 2px; }
 @media (max-width: 480px) { .dialog { padding: 16px; } .list { grid-template-columns: 1fr; } }
 
