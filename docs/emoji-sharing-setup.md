@@ -22,6 +22,10 @@ Emote Club専用プロジェクトで `supabase/migrations` のSQLを番号順�
 Next.jsは `output: standalone`。デプロイナウでは `npm ci --ignore-scripts` / `npm run build` を使用。npm用package-lock.jsonもコミットし、pnpm-lock.yamlと依存バージョンを揃えます。
 `lolipop deploy --name emote-club --framework next` で初回公開。以降は既存project IDを指定して公開します。GitHubへのpushのみで自動公開される設定は別途連携が必要です。
 
+## ローカル開発
+
+Next.js 16.4.2では開発用Reactデバッグチャネルの接続待ちで画面の初期化が止まり、「ログイン状態を確認中…」のままになる場合があります。`next.config.ts` の `experimental.reactDebugChannel: false` で回避しています。認証APIが正常でもエディタ操作まで反応しない場合は、この設定と開発サーバーの再起動を確認してください。
+
 ## 障害復旧
 
 Discord登録はリクエストUUIDで冪等化。送信結果不明（unknown/古いpending）は自動再送しません。Discordの絵文字一覧と監査ログを確認して、DBの該当 `emoji_registrations` をsucceeded（emoji_idを記録）またはfailedに修正します。確認前に履歴を消さないでください。
