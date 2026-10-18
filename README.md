@@ -17,3 +17,11 @@ Next.js 16 / React / TypeScript / PixiJS / sharp。Discord OAuthとAPIはNext.js
 [接続・公開・運用手順](docs/emoji-sharing-setup.md) / [エディタ・フォント出典](docs/emoji-workshop.md)
 
 元実装: [hukidamari/hukidamari-hub](https://github.com/hukidamari/hukidamari-hub)、`e041a9b` から絵文字機能を抽出。フォントは各 `public/fonts` のライセンスに従います。
+
+## コントリビューション
+
+不具合報告・改善提案のIssue、修正のPull Requestを歓迎します。開発・検証手順は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。大きな機能追加や仕様変更は、実装前にIssueで相談してください。
+
+## ライセンス
+
+コード本体は [MIT License](LICENSE) で公開しています。同梱フォントはMITライセンスの対象に含まず、各 `public/fonts/` ディレクトリのライセンス・著作権表記に従います。利用する依存ライブラリにも、それぞれのライセンスが適用されます。
