@@ -18,7 +18,7 @@ test("HTTP authentication boundary, OAuth state/PKCE, expiry and CSRF", { timeou
   const guildId = "223456789012345678";
   const server = spawn(process.execPath, ["--import", "./tests/fixtures/discord-fetch.mjs", "node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", String(port)], {
     cwd: process.cwd(), stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, NODE_ENV: "production", SITE_URL: origin, DISCORD_CLIENT_ID: "123456789012345678", DISCORD_CLIENT_SECRET: "test-only-unused-secret", DISCORD_GUILD_ID: guildId, SESSION_PASSWORD: password, SUPABASE_URL: "", SUPABASE_SERVICE_ROLE_KEY: "", DISCORD_BOT_TOKEN: "" },
+    env: { ...process.env, NODE_ENV: "production", SITE_URL: origin, DISCORD_CLIENT_ID: "123456789012345678", DISCORD_CLIENT_SECRET: "test-only-unused-secret", DISCORD_GUILD_ID: guildId, SESSION_PASSWORD: password, SUPABASE_URL: "", SUPABASE_SERVICE_ROLE_KEY: "", DISCORD_BOT_TOKEN: "test-only-bot" },
   });
   let logs = "";
   server.stdout.on("data", chunk => { logs += String(chunk); }); server.stderr.on("data", chunk => { logs += String(chunk); });
@@ -33,7 +33,7 @@ test("HTTP authentication boundary, OAuth state/PKCE, expiry and CSRF", { timeou
     assert.ok(ready, logs);
     const request = (path: string, options?: RequestInit) => fetch(`${origin}${path}`, { ...options, redirect: "manual" });
     assert.deepEqual(await (await request("/api/auth/session")).json(), { configured: true, storageConfigured: false, registrationConfigured: false, user: null, guild: null });
-    for (const path of ["/api/emoji/assets", "/api/emoji/assets/00000000-0000-4000-8000-000000000001/image"]) {
+    for (const path of ["/api/emoji/bot?guildId=223456789012345678", "/api/emoji/assets", "/api/emoji/assets/00000000-0000-4000-8000-000000000001/image"]) {
       const result = await request(path); assert.equal(result.status, 401); assert.match(result.headers.get("cache-control")!, /no-store/);
     }
     for (const [method, path] of [["POST", "/api/emoji/register"], ["POST", "/api/emoji/assets"], ["PATCH", "/api/emoji/assets/00000000-0000-4000-8000-000000000001"], ["DELETE", "/api/emoji/assets/00000000-0000-4000-8000-000000000001"], ["POST", "/api/auth/logout"]]) {
@@ -82,6 +82,18 @@ test("HTTP authentication boundary, OAuth state/PKCE, expiry and CSRF", { timeou
     // Valid signature/member reaches the storage guard, without manufacturing a successful save.
     const noStorage = await request(`/api/emoji/assets?guildId=${guildId}`, { headers: { Cookie: await signedSession({}) } });
     assert.equal(noStorage.status, 503); assert.equal((await noStorage.json()).code, "storage_not_configured");
+    const nonAdminBot = await request("/api/emoji/bot?guildId=423456789012345678", { headers: { Cookie: await signedSession({}) } });
+    assert.deepEqual(await nonAdminBot.json(), { installed: false, inviteUrl: null });
+    const botHeaders = { Cookie: await signedSession({ token: "admin-test-token" }) };
+    const installed = await request(`/api/emoji/bot?guildId=${guildId}`, { headers: botHeaders });
+    assert.deepEqual(await installed.json(), { installed: true, inviteUrl: null });
+    const absent = await request("/api/emoji/bot?guildId=423456789012345678", { headers: botHeaders });
+    const absentBody = await absent.json();
+    assert.equal(absentBody.installed, false);
+    const invite = new URL(absentBody.inviteUrl);
+    assert.equal(invite.searchParams.get("guild_id"), "423456789012345678");
+    assert.equal(invite.searchParams.get("disable_guild_select"), "true");
+    assert.equal((await request("/api/emoji/bot?guildId=999999999999999999", { headers: botHeaders })).status, 403);
     const logout = await request("/api/auth/logout", { method: "POST", headers: { Origin: origin } });
     assert.equal(logout.status, 200); assert.match(logout.headers.get("set-cookie")!, /Max-Age=0/);
   } finally {

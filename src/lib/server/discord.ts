@@ -28,7 +28,7 @@ export async function discordGuilds(token: string) {
 export async function discordGuild(token: string, guildId: string) {
   const guild = (await discordGuilds(token)).find(item => item.id === guildId);
   if (!guild) throw new ApiError(403, "not_member", "このサーバーのメンバーだけが共有素材を利用できます。");
-  return { id: guild.id, name: guild.name, isAdmin: guildAdministrator(guild), canCreateEmoji: guildEmojiCreator(guild) };
+  return { id: guild.id, name: guild.name, isAdmin: guildAdministrator(guild), canManageGuild: guildAdministrator(guild) || (BigInt(guild.permissions || "0") & BigInt(32)) !== BigInt(0), canCreateEmoji: guildEmojiCreator(guild) };
 }
 export async function exchangeDiscordCode(code: string, verifier: string) {
   const config = requireAuthConfig();

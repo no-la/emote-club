@@ -74,7 +74,7 @@ export function WorkshopAccount({ identity, error, onRefresh, onError }: { ident
   </div>;
 }
 
-type GuildOption = { id: string; name: string; inviteUrl: string | null };
+type GuildOption = { id: string; name: string };
 function GuildSelector({userId, guildId, onRefresh, onError}: {userId:string; guildId:string; onRefresh:()=>Promise<void>; onError:(message:string)=>void}) {
   const [guilds,setGuilds] = useState<GuildOption[]>([]);
   const [busy,setBusy] = useState(false);
@@ -85,7 +85,6 @@ function GuildSelector({userId, guildId, onRefresh, onError}: {userId:string; gu
     workshopRequest<{guilds:GuildOption[]}>("/api/auth/guilds",{signal:abort.signal}).then(data => {setGuilds(data.guilds);setError("");}).catch(e => {if(!abort.signal.aborted)setError(e.message);});
     return () => abort.abort();
   },[userId,revision]);
-  const selected = guilds.find(g => g.id===guildId);
   return <>
     <select aria-label="Discordサーバー" disabled={busy} value={guildId} onChange={async e => {
       const id = e.target.value; sessionStorage.setItem("emote-club-guild",id); setBusy(true);
@@ -95,6 +94,5 @@ function GuildSelector({userId, guildId, onRefresh, onError}: {userId:string; gu
       {guilds.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
     </select>
     <button type="button" title={error || "サーバー一覧を更新"} onClick={()=>setRevision(n=>n+1)}>{error ? "一覧を再取得" : "更新"}</button>
-    {selected?.inviteUrl && <a href={selected.inviteUrl} target="_blank" rel="noopener noreferrer" title="絵文字を直接追加するためのBotを導入します">Botを追加</a>}
   </>;
 }

@@ -16,3 +16,7 @@
 .notice { color: #bdc9d8; }.error { color: #ffb3b3; }.success { color: #9ce4ba; }
 .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
 .open:focus-visible, .dialog button:focus-visible, .dialog input:focus-visible, .dialog a:focus-visible { outline: 2px solid #5ccad3; outline-offset: 2px; }
+
+.botSetup { font-size: 12px; line-height: 1.6; }
+.botSetup:empty { display: none; }
+.botSetup a { display: inline-block; margin: 0 10px 8px 0; padding: 8px 12px; border-radius: 6px; background: #5ccad3; color: #172c30; text-decoration: none; font-weight: 600; }

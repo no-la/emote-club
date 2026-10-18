@@ -88,7 +88,7 @@ test("membership is checked for the requested guild and handles revoked/limited 
     assert.deepEqual(options?.headers, { Authorization: "Bearer provider-token" });
     return Response.json([{ id: "223456789012345678", name: "開発サーバー", permissions: "8" }]);
   });
-  assert.deepEqual(await discordGuild("provider-token", "223456789012345678"), { id: "223456789012345678", name: "開発サーバー", isAdmin: true, canCreateEmoji: true });
+  assert.deepEqual(await discordGuild("provider-token", "223456789012345678"), { id: "223456789012345678", name: "開発サーバー", isAdmin: true, canManageGuild: true, canCreateEmoji: true });
   mock.restoreAll(); mock.method(globalThis, "fetch", async () => Response.json([{ id: "other", name: "other" }]));
   await assert.rejects(discordGuild("token", "223456789012345678"), errorCode("not_member"));
   mock.restoreAll(); mock.method(globalThis, "fetch", async () => new Response(null, { status: 401 }));
