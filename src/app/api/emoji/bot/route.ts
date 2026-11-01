@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   return api(async () => {
     const { guild } = await requireMember(request, true);
     const installed = await discordBotInstalled(guild.id);
-    const inviteUrl = !installed && guild.canManageGuild
+    const inviteUrl = !installed
       ? `https://discord.com/oauth2/authorize?client_id=${requireAuthConfig().clientId}&scope=bot&permissions=8796093022208&guild_id=${guild.id}&disable_guild_select=true`
       : null;
     return privateJson({ installed, inviteUrl });

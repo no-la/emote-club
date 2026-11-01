@@ -25,6 +25,7 @@ export default function RegisterEmoji({ identity, image, controlRef }: { control
   const [bot, setBot] = useState<{ installed: boolean; inviteUrl: string | null } | null>(null);
   const [botError, setBotError] = useState("");
   const [botRevision, setBotRevision] = useState(0);
+  const [inviteCopyMessage, setInviteCopyMessage] = useState("");
   const guildId = identity?.guild?.id;
   const userId = identity?.user?.id;
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function RegisterEmoji({ identity, image, controlRef }: { control
       controller?.abort();
       controller = new AbortController();
       const signal = controller.signal;
-      setBot(null); setBotError("");
+      setBot(null); setBotError(""); setInviteCopyMessage("");
       void workshopRequest<{ installed: boolean; inviteUrl: string | null }>(guildUrl("/api/emoji/bot", guildId), { signal }).then(value => {
         if (!signal.aborted) setBot(value);
       }).catch(cause => {
@@ -67,10 +68,19 @@ export default function RegisterEmoji({ identity, image, controlRef }: { control
         }
       } catch { /* Ignore inaccessible storage. */ }
     }
-    setBot(null); setBotError(""); setOpened(true);
+    setBot(null); setBotError(""); setInviteCopyMessage(""); setOpened(true);
     dialog.current?.showModal();
   }
   useImperativeHandle(controlRef, () => ({ open }));
+  async function copyInvite() {
+    if (!bot?.inviteUrl) return;
+    try {
+      await navigator.clipboard.writeText(bot.inviteUrl);
+      setInviteCopyMessage("招待リンクをコピーしました。");
+    } catch {
+      setInviteCopyMessage("コピーできませんでした。「Botを追加」のリンクをコピーしてください。");
+    }
+  }
   async function submit() {
     if (inFlight.current || !allowed || !bot?.installed || !preview || !emojiName(name) || submission) return;
     inFlight.current = true; setBusy(true); setError("");
@@ -116,7 +126,12 @@ export default function RegisterEmoji({ identity, image, controlRef }: { control
         {botError && <p role="alert">{botError}</p>}
         {bot?.installed === false && <>
           <p>このサーバーに絵文字を追加するには、Botの導入が必要です。</p>
-          {bot.inviteUrl ? <a href={bot.inviteUrl} target="_blank" rel="noopener noreferrer">Botを追加</a> : <p>サーバー管理者にBotの追加を依頼してください。</p>}
+          {bot.inviteUrl && <>
+            <a href={bot.inviteUrl} target="_blank" rel="noopener noreferrer">Botを追加</a>
+            <button type="button" onClick={() => void copyInvite()}>招待リンクをコピー</button>
+          </>}
+          <p>Botの追加には「サーバー管理」権限が必要です。権限がない場合は、招待リンクを権限のある人に共有してください。</p>
+          {inviteCopyMessage && <p role="status">{inviteCopyMessage}</p>}
         </>}
         {(botError || bot?.installed === false) && <button type="button" onClick={() => setBotRevision(value => value + 1)}>参加状況を再確認</button>}
       </section>}

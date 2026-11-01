@@ -4,7 +4,7 @@
 
 専用Discord Applicationを用意し、OAuth2 Redirectsに `SITE_URL/api/auth/discord/callback` を登録して保存します。ローカルは `http://localhost:3000/api/auth/discord/callback`。
 `DISCORD_CLIENT_ID`、`DISCORD_CLIENT_SECRET`、Botの `DISCORD_BOT_TOKEN` をサーバー環境変数に設定します。Public Botを有効にし、Privileged Gateway Intentsは不要です。
-ログインscopeはidentify/guilds。Bot導入リンクは選択したサーバーを固定し、Create Expressions (1<<43) のみ要求します。「サーバーに追加」モーダルを開くと、選択サーバーへのBot参加を確認します。Bot未参加時のみ、サーバー管理権限のある人に導入リンクを表示し、権限がない人には管理者への依頼を案内します。Discordから戻ると再確認します。確認APIの障害・レート制限を未参加とは扱いません。サーバー管理者が導入後、絵文字作成権限を持つユーザーが利用できます。常駐Gateway接続は不要です。
+ログインscopeはidentify/guilds。Bot導入リンクは選択したサーバーを固定し、Create Expressions (1<<43) のみ要求します。「サーバーに追加」モーダルを開くと、選択サーバーへのBot参加を確認します。Bot未参加時は、選択サーバーの全メンバーに導入リンクと「招待リンクをコピー」を表示します。Botの追加には「サーバー管理」権限が必要と案内し、権限がない人もリンクを権限のある人に共有できます。Discordから戻ると再確認します。確認APIの障害・レート制限を未参加とは扱いません。「サーバー管理」権限のある人が導入後、絵文字作成権限を持つユーザーが利用できます。常駐Gateway接続は不要です。
 
 ## Supabase
 
